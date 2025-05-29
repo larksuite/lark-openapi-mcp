@@ -141,6 +141,76 @@ To access APIs with user identity, you can add a user access token:
 }
 ```
 
+### OAuth Authentication (Recommended)
+
+Instead of manually providing user access tokens, you can use OAuth 2.0 to automatically obtain and manage user tokens. This is the recommended approach for better security and user experience.
+
+#### Interactive OAuth Setup
+
+For the easiest setup, use the interactive OAuth flow:
+
+```bash
+# Run interactive OAuth authentication
+lark-mcp oauth --interactive -a <your_app_id> -s <your_app_secret>
+```
+
+This command will:
+1. Start a local callback server
+2. Open your browser for authorization
+3. Automatically handle the callback and token exchange
+4. Store tokens securely for future use
+
+#### Manual OAuth Setup
+
+If you prefer manual control:
+
+```bash
+# Step 1: Generate authorization URL
+lark-mcp oauth -a <your_app_id> -s <your_app_secret>
+
+# Step 2: Complete authorization in browser and get the code
+# Step 3: Exchange code for tokens
+lark-mcp oauth-callback <authorization_code> -a <your_app_id> -s <your_app_secret>
+```
+
+#### OAuth Configuration Options
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `--interactive` | Start interactive OAuth flow with built-in callback server | false |
+| `--port <port>` | Port for OAuth callback server | 8080 |
+| `--redirect-uri <uri>` | OAuth redirect URI | `http://localhost:8080/callback` |
+| `--scope <scope>` | OAuth scope | `user:email` |
+| `--clear` | Clear stored tokens | false |
+
+#### Using OAuth Tokens with MCP
+
+Once OAuth tokens are stored, the MCP server will automatically use them:
+
+```json
+{
+  "mcpServers": {
+    "lark-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@larksuiteoapi/lark-mcp",
+        "mcp",
+        "-a",
+        "<your_app_id>",
+        "-s",
+        "<your_app_secret>"
+      ]
+    }
+  }
+}
+```
+
+The server will automatically:
+- Load stored OAuth tokens
+- Refresh tokens when they expire
+- Fall back to app-level authentication if user tokens are unavailable
+
 ### Custom API Configuration
 
 By default, the MCP service enables common APIs. To enable other tools or only specific APIs or presets, you can specify them using the `-t` parameter (separated by commas):

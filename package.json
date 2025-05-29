@@ -40,17 +40,19 @@
     "node": ">=16.20.0"
   },
   "dependencies": {
+    "@larksuiteoapi/lark-mcp": "^0.3.1",
     "@larksuiteoapi/node-sdk": "^1.47.0",
     "@modelcontextprotocol/sdk": "^1.11.0",
     "axios": "^1.8.4",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "open": "^10.1.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.4.5",
-    "@types/express": "^5.0.1",
     "jest": "^29.7.0",
     "prettier": "^3.5.3",
     "ts-jest": "^29.3.2",

@@ -71,7 +71,7 @@ describe('initStdioServer', () => {
     jest.restoreAllMocks();
   });
 
-  it('应该初始化MCP服务器并连接', () => {
+  it('应该初始化MCP服务器并连接', async () => {
     const options: McpServerOptions = {
       appId: 'test-app-id',
       appSecret: 'test-app-secret',
@@ -80,7 +80,7 @@ describe('initStdioServer', () => {
     };
 
     // 首先初始化MCP服务器
-    const { mcpServer } = initMcpServer(options);
+    const { mcpServer } = await initMcpServer(options);
 
     // 然后使用mcpServer调用initStdioServer
     initStdioServer(mcpServer);
@@ -90,7 +90,7 @@ describe('initStdioServer', () => {
     expect(connectMock).toHaveBeenCalled();
   });
 
-  it('应该处理连接错误', () => {
+  it('应该处理连接错误', async () => {
     const options: McpServerOptions = {
       appId: 'test-app-id',
       appSecret: 'test-app-secret',
@@ -107,7 +107,7 @@ describe('initStdioServer', () => {
     }));
 
     // 首先初始化MCP服务器
-    const { mcpServer } = initMcpServer(options);
+    const { mcpServer } = await initMcpServer(options);
 
     // 然后使用mcpServer调用initStdioServer
     initStdioServer(mcpServer);
