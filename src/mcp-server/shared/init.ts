@@ -6,7 +6,7 @@ import * as larkmcp from '../../mcp-tool';
 import { oapiHttpInstance } from '../../utils/http-instance';
 
 export function initMcpServer(options: McpServerOptions) {
-  const { appId, appSecret, userAccessToken } = options;
+  const { appId, appSecret, userAccessToken, refreshToken } = options;
 
   if (!appId || !appSecret) {
     console.error(
@@ -39,10 +39,23 @@ export function initMcpServer(options: McpServerOptions) {
       ? { allowTools: allowTools as larkmcp.ToolName[], language: options.language }
       : { language: options.language },
     tokenMode: options.tokenMode,
+    autoRefreshToken: !options.disableAutoRefresh, // 默认启用自动刷新
+    refreshTokenOptions: {
+      refreshThresholdMinutes: options.refreshThreshold ? parseInt(options.refreshThreshold) : 1,
+    },
+    userAccessToken,
+    refreshToken,
   });
 
   if (userAccessToken) {
-    larkClient.updateUserAccessToken(userAccessToken);
+    if (refreshToken) {
+      // 如果同时提供了访问令牌和刷新令牌，初始化自动刷新
+      larkClient.initializeTokenRefresh(userAccessToken, refreshToken, 300);
+      console.log('Auto-refresh enabled with 300s token expiry');
+    } else {
+      // 只提供访问令牌，传统方式更新
+      larkClient.updateUserAccessToken(userAccessToken);
+    }
   }
 
   larkClient.registerMcpServer(mcpServer, { toolNameCase: options.toolNameCase });

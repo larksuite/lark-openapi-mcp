@@ -2,6 +2,15 @@ import * as lark from '@larksuiteoapi/node-sdk';
 import { ProjectName, ToolName } from '../tools';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types';
 
+export interface TokenRefreshOptions {
+  refreshThresholdMinutes?: number;
+  maxRetries?: number;
+  retryDelayMs?: number;
+  tokenExpiresInSeconds?: number;
+  onTokenRefreshed?: (tokenInfo: any) => void;
+  onRefreshError?: (error: Error) => void;
+}
+
 export type ToolNameCase = 'snake' | 'camel' | 'kebab' | 'dot';
 
 export enum TokenMode {
@@ -71,4 +80,12 @@ export interface LarkMcpToolOptions extends LarkClientOptions {
   // 工具选项
   toolsOptions?: ToolsFilterOptions;
   tokenMode?: TokenMode;
+  // 用户访问令牌
+  userAccessToken?: string;
+  // 自动刷新令牌（默认开启）
+  autoRefreshToken?: boolean;
+  // 刷新令牌配置
+  refreshTokenOptions?: TokenRefreshOptions;
+  // 初始刷新令牌
+  refreshToken?: string;
 }
