@@ -1,11 +1,9 @@
-import envPaths from 'env-paths';
-
-const paths = envPaths('lark-mcp');
+import { ENV_PATHS } from '../utils/constants';
 
 export const AUTH_CONFIG = {
   SERVER_NAME: 'lark-mcp',
   AES_KEY_NAME: 'encryption-key',
-  STORAGE_DIR: paths.data,
+  STORAGE_DIR: ENV_PATHS.data,
   STORAGE_FILE: 'storage.json',
   ENCRYPTION: {
     ALGORITHM: 'aes-256-cbc' as const,

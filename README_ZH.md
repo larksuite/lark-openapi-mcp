@@ -200,7 +200,9 @@ lark-mcp mcp -a <your_app_id> -s <your_app_secret> -t im.v1.message.create,im.v1
 | `--app-id` | `-a` | 飞书/Lark应用的App ID | `-a cli_xxxx` |
 | `--app-secret` | `-s` | 飞书/Lark应用的App Secret | `-s xxxx` |
 | `--domain` | `-d` | 飞书/Lark API域名，默认为https://open.feishu.cn | `-d https://open.larksuite.com` |
-| `--scope` |  | 指定授权用户访问令牌的OAuth权限范围，默认为应用开通的全部权限，用空格分割 | `--scope offline_access docx:document` |
+| `--host` |  | 监听主机，默认为localhost | `--host localhost` |
+| `--port` | `-p` | 监听端口，默认为3000 | `-p 3000` |
+| `--scope` |  | 指定授权用户访问令牌的OAuth权限范围，默认为应用开通的全部权限，用空格或者逗号分割 | `--scope offline_access docx:document` |
 
 **`lark-mcp logout` 命令参数**：
 
@@ -219,13 +221,13 @@ lark-mcp mcp -a <your_app_id> -s <your_app_secret> -t im.v1.message.create,im.v1
 | `--app-id` | `-a` | 飞书/Lark应用的App ID | `-a cli_xxxx` |
 | `--app-secret` | `-s` | 飞书/Lark应用的App Secret | `-s xxxx` |
 | `--domain` | `-d` | 飞书/Lark API域名，默认为https://open.feishu.cn | `-d https://open.larksuite.com` |
-| `--tools` | `-t` | 需要启用的API工具列表，用逗号分隔 | `-t im.v1.message.create,im.v1.chat.create` |
+| `--tools` | `-t` | 需要启用的API工具列表，用空格或者逗号分割 | `-t im.v1.message.create,im.v1.chat.create` |
 | `--tool-name-case` | `-c` | 工具注册名称的命名格式，可选值为snake、camel、dot或kebab，默认为snake | `-c camel` |
 | `--language` | `-l` | 工具语言，可选值为zh或en，默认为en | `-l zh` |
 | `--user-access-token` | `-u` | 用户访问令牌，用于以用户身份调用API | `-u u-xxxx` |
 | `--token-mode` |  | API令牌类型，可选值为auto、tenant_access_token或user_access_token，默认为auto | `--token-mode user_access_token` |
 | `--oauth` |  | 开启 MCP Auth Server 获取user_access_token，且当Token失效时自动要求用户重新登录(Beta) | `--oauth` |
-| `--scope` |  | 指定授权用户访问令牌的OAuth权限范围，默认为应用开通的全部权限，用空格分割 | `--scope offline_access docx:document` |
+| `--scope` |  | 指定授权用户访问令牌的OAuth权限范围，默认为应用开通的全部权限，用空格或者逗号分割 | `--scope offline_access docx:document` |
 | `--mode` | `-m` | 传输模式，可选值为stdio、streamable或sse，默认为stdio | `-m streamable` |
 | `--host` |  | SSE\Streamable模式下的监听主机，默认为localhost | `--host 0.0.0.0` |
 | `--port` | `-p` | SSE\Streamable模式下的监听端口，默认为3000 | `-p 3000` |

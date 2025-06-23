@@ -137,7 +137,7 @@ describe('initOAPIMcpServer', () => {
     const options = {
       appId: 'test-app-id',
       appSecret: 'test-app-secret',
-      tools: 'tool1,tool2',
+      tools: ['tool1', 'tool2'],
       host: 'localhost',
       port: 3000,
     };

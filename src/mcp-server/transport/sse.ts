@@ -3,6 +3,7 @@ import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { InitTransportServerFunction } from '../shared';
 import { LarkAuthHandler } from '../../auth';
 import { parseMCPServerOptionsFromRequest } from './utils';
+import { logger } from '../../utils/logger';
 
 export const initSSEServer: InitTransportServerFunction = (getNewServer, options) => {
   const { port, host } = options;
@@ -32,6 +33,8 @@ export const initSSEServer: InitTransportServerFunction = (getNewServer, options
   };
 
   app.get('/sse', authMiddleware, async (req: Request, res: Response) => {
+    logger.info(`[SSEServerTransport] Received GET SSE request`);
+
     const token = req.auth?.token;
     const { data } = parseMCPServerOptionsFromRequest(req);
     const mcpServer = getNewServer({ ...data, userAccessToken: data.userAccessToken || token }, authHandler);
@@ -49,6 +52,8 @@ export const initSSEServer: InitTransportServerFunction = (getNewServer, options
 
   app.post('/messages', authMiddleware, async (req: Request, res: Response) => {
     console.log('Received POST messages request');
+    logger.info(`[SSEServerTransport] Received POST messages request`);
+
     const sessionId = req.query.sessionId as string;
     const transport = transports.get(sessionId);
     if (!transport) {
@@ -60,9 +65,10 @@ export const initSSEServer: InitTransportServerFunction = (getNewServer, options
 
   app.listen(port, host, (error) => {
     if (error) {
-      console.error('Server error:', error);
+      logger.error(`[SSEServerTransport] Server error: ${error}`);
       process.exit(1);
     }
     console.log(`📡 SSE endpoint: http://${host}:${port}/sse`);
+    logger.info(`[SSEServerTransport] SSE endpoint: http://${host}:${port}/sse`);
   });
 };

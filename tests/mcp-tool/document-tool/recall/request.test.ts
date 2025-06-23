@@ -1,11 +1,10 @@
-import axios from 'axios';
 import { recallDeveloperDocument } from '../../../../src/mcp-tool/document-tool/recall/request';
 import { DocumentRecallToolOptions } from '../../../../src/mcp-tool/document-tool/recall/type';
-import { USER_AGENT } from '../../../../src/utils/constants';
+import { commonHttpInstance } from '../../../../src/utils/http-instance';
 
-// 模拟axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+// 模拟http-instance
+jest.mock('../../../../src/utils/http-instance');
+const mockedHttpInstance = commonHttpInstance as jest.Mocked<typeof commonHttpInstance>;
 
 describe('recallDeveloperDocument', () => {
   // 每个测试前重置模拟
@@ -20,7 +19,7 @@ describe('recallDeveloperDocument', () => {
         chunks: ['result1', 'result2', 'result3', 'result4'],
       },
     };
-    mockedAxios.post.mockResolvedValueOnce(mockResponse);
+    mockedHttpInstance.post.mockResolvedValueOnce(mockResponse);
 
     // 测试参数
     const query = 'test query';
@@ -33,12 +32,11 @@ describe('recallDeveloperDocument', () => {
     await recallDeveloperDocument(query, options);
 
     // 验证请求参数
-    expect(mockedAxios.post).toHaveBeenCalledWith(
+    expect(mockedHttpInstance.post).toHaveBeenCalledWith(
       'https://example.com/document_portal/v1/recall',
       { question: query },
       {
         timeout: 10000,
-        headers: { 'User-Agent': USER_AGENT },
       },
     );
   });
@@ -50,7 +48,7 @@ describe('recallDeveloperDocument', () => {
         chunks: ['result1', 'result2', 'result3', 'result4'],
       },
     };
-    mockedAxios.post.mockResolvedValueOnce(mockResponse);
+    mockedHttpInstance.post.mockResolvedValueOnce(mockResponse);
 
     // 测试参数
     const query = 'test query';
@@ -74,7 +72,7 @@ describe('recallDeveloperDocument', () => {
         chunks: ['result1', 'result2', 'result3', 'result4', 'result5'],
       },
     };
-    mockedAxios.post.mockResolvedValueOnce(mockResponse);
+    mockedHttpInstance.post.mockResolvedValueOnce(mockResponse);
 
     // 测试参数，不包含count
     const query = 'test query';
@@ -97,7 +95,7 @@ describe('recallDeveloperDocument', () => {
         chunks: [],
       },
     };
-    mockedAxios.post.mockResolvedValueOnce(mockResponse);
+    mockedHttpInstance.post.mockResolvedValueOnce(mockResponse);
 
     // 测试参数
     const query = 'test query';
@@ -118,7 +116,7 @@ describe('recallDeveloperDocument', () => {
     const mockResponse = {
       data: {},
     };
-    mockedAxios.post.mockResolvedValueOnce(mockResponse);
+    mockedHttpInstance.post.mockResolvedValueOnce(mockResponse);
 
     // 测试参数
     const query = 'test query';
@@ -137,7 +135,7 @@ describe('recallDeveloperDocument', () => {
   it('应该抛出错误当请求失败时', async () => {
     // 模拟网络错误
     const errorMessage = 'Network Error';
-    mockedAxios.post.mockRejectedValueOnce(new Error(errorMessage));
+    mockedHttpInstance.post.mockRejectedValueOnce(new Error(errorMessage));
 
     // 测试参数
     const query = 'test query';

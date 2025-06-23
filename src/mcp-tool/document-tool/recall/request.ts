@@ -1,6 +1,5 @@
-import axios from 'axios';
 import { DocumentRecallToolOptions } from './type';
-import { USER_AGENT } from '../../../utils/constants';
+import { commonHttpInstance } from '../../../utils/http-instance';
 
 export const recallDeveloperDocument = async (query: string, options: DocumentRecallToolOptions) => {
   try {
@@ -11,9 +10,8 @@ export const recallDeveloperDocument = async (query: string, options: DocumentRe
       question: query,
     };
     // Send network request to Feishu search API
-    const response = await axios.post(searchEndpoint, payload, {
+    const response = await commonHttpInstance.post(searchEndpoint, payload, {
       timeout: 10000,
-      headers: { 'User-Agent': USER_AGENT },
     });
 
     // Process search results

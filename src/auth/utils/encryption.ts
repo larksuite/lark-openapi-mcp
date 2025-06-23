@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { AUTH_CONFIG } from '../config';
+import { logger } from '../../utils/logger';
 
 export class EncryptionUtil {
   private aesKey: string;
@@ -20,6 +21,7 @@ export class EncryptionUtil {
   decrypt(encryptedData: string): string {
     const parts = encryptedData.split(':');
     if (parts.length !== 2) {
+      logger.error(`[EncryptionUtil] decrypt: Invalid encrypted data format`);
       throw new Error('Invalid encrypted data format');
     }
     const iv = Buffer.from(parts[0], 'hex');

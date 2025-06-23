@@ -46,7 +46,7 @@ export const larkDocxBuiltinSearchTool: McpTool = {
       if (!userAccessToken) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: 'User access token is not configured' }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ msg: 'User access token is not configured' }) }],
         };
       }
 
@@ -63,7 +63,7 @@ export const larkDocxBuiltinSearchTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: `Document search request successful: ${JSON.stringify(response.data ?? response)}`,
+            text: JSON.stringify(response.data ?? response),
           },
         ],
       };
@@ -73,7 +73,7 @@ export const larkDocxBuiltinSearchTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: `Document search request failed: ${JSON.stringify((error as any).response.data)}`,
+            text: JSON.stringify((error as any).response.data),
           },
         ],
       };
@@ -117,7 +117,12 @@ export const larkDocxBuiltinImportTool: McpTool = {
       if (!response?.file_token) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: 'Document import failed, please check the markdown file content' }],
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({ msg: 'Document import failed, please check the markdown file content' }),
+            },
+          ],
         };
       }
 
@@ -141,7 +146,12 @@ export const larkDocxBuiltinImportTool: McpTool = {
       if (!taskId) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: 'Document import failed, please check the markdown file content' }],
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({ msg: 'Document import failed, please check the markdown file content' }),
+            },
+          ],
         };
       }
 
@@ -156,7 +166,7 @@ export const larkDocxBuiltinImportTool: McpTool = {
             content: [
               {
                 type: 'text' as const,
-                text: `Document import request successful: ${JSON.stringify(taskResponse.data ?? taskResponse)}`,
+                text: JSON.stringify(taskResponse.data ?? taskResponse),
               },
             ],
           };
@@ -165,7 +175,7 @@ export const larkDocxBuiltinImportTool: McpTool = {
             content: [
               {
                 type: 'text' as const,
-                text: 'Document import failed, please try again later' + JSON.stringify(taskResponse.data),
+                text: JSON.stringify(taskResponse.data),
               },
             ],
           };
@@ -177,7 +187,7 @@ export const larkDocxBuiltinImportTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: 'Document import failed, please try again later',
+            text: JSON.stringify({ msg: 'Document import failed, please try again later' }),
           },
         ],
       };
@@ -187,7 +197,7 @@ export const larkDocxBuiltinImportTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: `Document import request failed: ${JSON.stringify((error as any)?.response?.data || error)}`,
+            text: JSON.stringify((error as any)?.response?.data || error),
           },
         ],
       };

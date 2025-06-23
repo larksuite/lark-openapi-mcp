@@ -386,7 +386,7 @@ describe('LarkAuthHandler', () => {
         domain: 'test.domain.com',
         appId: 'test-app-id',
         appSecret: 'test-app-secret',
-        scope: 'test-scope',
+        scope: ['test-scope'],
       };
 
       handler = new LarkAuthHandler(mockApp, options);

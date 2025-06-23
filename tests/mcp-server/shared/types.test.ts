@@ -216,13 +216,13 @@ describe('MCP Server Types', () => {
         appId: 'test-app-id',
         appSecret: 'test-app-secret',
         domain: 'test.domain.com',
-        tools: ['tool1', 'tool2'],
+        tools: ['single-tool'],
         language: 'zh',
         toolNameCase: 'snake',
         tokenMode: 'auto' as larkmcp.TokenMode,
         userAccessToken: 'test-token',
         oauth: true,
-        scope: 'test-scope',
+        scope: ['test-scope'],
         mode: 'stdio',
         host: 'localhost',
         port: 3000,
@@ -236,14 +236,14 @@ describe('MCP Server Types', () => {
 
     it('应该支持不同的tools类型', () => {
       const optionsWithStringTools: McpServerOptions = {
-        tools: 'single-tool',
+        tools: ['single-tool'],
       };
 
       const optionsWithArrayTools: McpServerOptions = {
         tools: ['tool1', 'tool2'],
       };
 
-      expect(optionsWithStringTools.tools).toBe('single-tool');
+      expect(optionsWithStringTools.tools).toEqual(['single-tool']);
       expect(optionsWithArrayTools.tools).toEqual(['tool1', 'tool2']);
     });
 

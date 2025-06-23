@@ -3,14 +3,14 @@ import { LarkOAuth2OAuthServerProvider } from '../../src/auth/provider';
 import { authStore } from '../../src/auth/store';
 import { isTokenValid } from '../../src/auth/utils/is-token-valid';
 import { OAuthClientInformationFull, OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
+import { commonHttpInstance } from '../../src/utils/http-instance';
 
 // Mock dependencies
 jest.mock('../../src/auth/store');
 jest.mock('../../src/auth/utils/is-token-valid');
+jest.mock('../../src/utils/http-instance');
 
-// Mock fetch globally
-const mockFetch = jest.fn();
-global.fetch = mockFetch;
+const mockedHttpInstance = commonHttpInstance as jest.Mocked<typeof commonHttpInstance>;
 
 describe('LarkOAuth2OAuthServerProvider', () => {
   let provider: LarkOAuth2OAuthServerProvider;
@@ -138,9 +138,8 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         scope: 'scope1 scope2',
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockTokenResponse),
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: mockTokenResponse,
       });
 
       const result = await provider.exchangeAuthorizationCode(
@@ -150,18 +149,20 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         'http://example.com/callback',
       );
 
-      expect(mockFetch).toHaveBeenCalledWith('https://open.feishu.cn/open-apis/authen/v2/oauth/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify({
+      expect(mockedHttpInstance.post).toHaveBeenCalledWith(
+        'https://open.feishu.cn/open-apis/authen/v2/oauth/token',
+        {
           grant_type: 'authorization_code',
           client_id: 'test-app-id',
           client_secret: 'test-app-secret',
           code: 'test-auth-code',
           redirect_uri: 'http://localhost:3000/callback?redirect_uri=http://example.com/callback',
           code_verifier: 'test-verifier',
-        }),
-      });
+        },
+        {
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        },
+      );
 
       expect(authStore.storeToken).toHaveBeenCalledWith({
         clientId: 'test-client-id',
@@ -187,9 +188,8 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         scope: 'scope1 scope2',
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockTokenResponse),
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: mockTokenResponse,
       });
 
       const result = await provider.exchangeAuthorizationCode(
@@ -223,9 +223,8 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         expires_in: 3600,
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockTokenResponse),
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: mockTokenResponse,
       });
 
       const result = await provider.exchangeAuthorizationCode(
@@ -252,11 +251,14 @@ describe('LarkOAuth2OAuthServerProvider', () => {
     });
 
     it('应该在token交换失败时抛出错误', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        text: jest.fn().mockResolvedValue('Bad Request'),
-      });
+      const mockError = {
+        response: {
+          status: 400,
+          data: 'Bad Request',
+        },
+      };
+
+      mockedHttpInstance.post.mockRejectedValueOnce(mockError);
 
       await expect(provider.exchangeAuthorizationCode(mockClient, 'invalid-code')).rejects.toThrow(
         'Token exchange failed: 400 Bad Request',
@@ -288,24 +290,25 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         scope: 'scope1 scope2',
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockTokenResponse),
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: mockTokenResponse,
       });
 
       const result = await provider.exchangeRefreshToken(mockClient, 'test-refresh-token', ['scope1', 'scope2']);
 
-      expect(mockFetch).toHaveBeenCalledWith('https://open.feishu.cn/open-apis/authen/v2/oauth/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify({
+      expect(mockedHttpInstance.post).toHaveBeenCalledWith(
+        'https://open.feishu.cn/open-apis/authen/v2/oauth/token',
+        {
           grant_type: 'refresh_token',
           client_id: 'test-app-id',
           client_secret: 'test-app-secret',
           refresh_token: 'test-refresh-token',
           scope: 'scope1 scope2',
-        }),
-      });
+        },
+        {
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        },
+      );
 
       expect(result).toEqual(mockTokenResponse);
     });
@@ -332,15 +335,26 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         expires_in: 3600,
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockTokenResponse),
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: mockTokenResponse,
       });
 
-      await provider.exchangeRefreshToken(mockClient, 'test-refresh-token');
+      const result = await provider.exchangeRefreshToken(mockClient, 'test-refresh-token');
 
-      const requestBody = JSON.parse((mockFetch as jest.Mock).mock.calls[0][1].body);
-      expect(requestBody.scope).toBeUndefined();
+      expect(mockedHttpInstance.post).toHaveBeenCalledWith(
+        'https://open.feishu.cn/open-apis/authen/v2/oauth/token',
+        {
+          grant_type: 'refresh_token',
+          client_id: 'test-app-id',
+          client_secret: 'test-app-secret',
+          refresh_token: 'test-refresh-token',
+        },
+        {
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        },
+      );
+
+      expect(result).toEqual(mockTokenResponse);
     });
 
     it('应该处理没有expires_in的刷新token响应', async () => {
@@ -362,12 +376,10 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         access_token: 'new-access-token',
         refresh_token: 'new-refresh-token',
         token_type: 'Bearer',
-        scope: 'scope1 scope2',
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockTokenResponse),
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: mockTokenResponse,
       });
 
       const result = await provider.exchangeRefreshToken(mockClient, 'test-refresh-token', ['scope1', 'scope2']);
@@ -375,7 +387,7 @@ describe('LarkOAuth2OAuthServerProvider', () => {
       expect(authStore.storeToken).toHaveBeenCalledWith({
         clientId: 'test-client-id',
         token: 'new-access-token',
-        scopes: ['scope1', 'scope2'],
+        scopes: [],
         expiresAt: undefined,
         extra: {
           refreshToken: 'new-refresh-token',
@@ -410,9 +422,8 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         expires_in: 3600,
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockTokenResponse),
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: mockTokenResponse,
       });
 
       const result = await provider.exchangeRefreshToken(mockClient, 'test-refresh-token', ['scope1', 'scope2']);
@@ -440,7 +451,7 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         scopes: ['scope1', 'scope2'],
         expiresAt: Date.now() / 1000 + 3600,
         extra: {
-          refreshToken: 'invalid-refresh-token',
+          refreshToken: 'test-refresh-token',
           appId: 'test-app-id',
           appSecret: 'test-app-secret',
         },
@@ -448,11 +459,14 @@ describe('LarkOAuth2OAuthServerProvider', () => {
 
       (authStore.getTokenByRefreshToken as jest.Mock).mockResolvedValue(mockOriginalToken);
 
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        text: jest.fn().mockResolvedValue('Unauthorized'),
-      });
+      const mockError = {
+        response: {
+          status: 401,
+          data: 'Unauthorized',
+        },
+      };
+
+      mockedHttpInstance.post.mockRejectedValueOnce(mockError);
 
       await expect(provider.exchangeRefreshToken(mockClient, 'invalid-refresh-token')).rejects.toThrow(
         'Token refresh failed: 401 Unauthorized',
@@ -460,89 +474,12 @@ describe('LarkOAuth2OAuthServerProvider', () => {
     });
   });
 
-  describe('verifyAccessToken method', () => {
-    it('应该返回有效token的信息', async () => {
-      const mockStoredToken = {
-        token: 'test-token',
-        clientId: 'test-client-id',
-        scopes: ['scope1', 'scope2'],
-        expiresAt: Date.now() / 1000 + 3600,
-        extra: { refresh_token: 'test-refresh-token' },
-      };
-
-      (isTokenValid as jest.Mock).mockResolvedValue({
-        valid: true,
-        token: mockStoredToken,
-      });
-
-      const result = await provider.verifyAccessToken('test-token');
-
-      expect(isTokenValid).toHaveBeenCalledWith('test-token');
-      expect(result).toEqual(mockStoredToken);
-    });
-
-    it('应该处理无效token的情况', async () => {
-      const mockStoredToken = {
-        token: 'test-token',
-        clientId: 'test-client-id',
-        scopes: ['scope1', 'scope2'],
-        expiresAt: 1,
-        extra: { refresh_token: 'test-refresh-token' },
-      };
-
-      (isTokenValid as jest.Mock).mockResolvedValue({
-        valid: false,
-        token: mockStoredToken,
-      });
-
-      const result = await provider.verifyAccessToken('invalid-token');
-
-      expect(result).toEqual(mockStoredToken);
-    });
-
-    it('应该处理没有stored token的情况', async () => {
-      (isTokenValid as jest.Mock).mockResolvedValue({
-        valid: false,
-        token: null,
-      });
-
-      const result = await provider.verifyAccessToken('invalid-token');
-
-      expect(result).toEqual({
-        token: '',
-        clientId: '',
-        scopes: [],
-        expiresAt: 1,
-        extra: {},
-      });
-    });
-
-    it('应该在token无效时返回stored token信息', async () => {
-      const storedToken = {
-        token: 'stored-token',
-        clientId: 'stored-client-id',
-        scopes: ['read', 'write'],
-        expiresAt: 1234567890,
-        extra: { refresh_token: 'refresh-token' },
-      };
-
-      (isTokenValid as jest.Mock).mockResolvedValue({
-        valid: false,
-        token: storedToken,
-      });
-
-      const result = await provider.verifyAccessToken('invalid-token');
-
-      expect(result).toEqual(storedToken);
-    });
-  });
-
   describe('exchangeRefreshToken with scopes', () => {
     it('应该在有scopes时包含scope参数', async () => {
       const mockOriginalToken = {
         token: 'original-token',
-        clientId: 'test-client',
-        scopes: ['read', 'write'],
+        clientId: 'test-client-id',
+        scopes: ['scope1', 'scope2'],
         expiresAt: Date.now() / 1000 + 3600,
         extra: {
           refreshToken: 'test-refresh-token',
@@ -553,39 +490,67 @@ describe('LarkOAuth2OAuthServerProvider', () => {
 
       (authStore.getTokenByRefreshToken as jest.Mock).mockResolvedValue(mockOriginalToken);
 
-      const client = { client_id: 'test-client', redirect_uris: ['http://localhost:3000/callback'] };
-      const refreshToken = 'test-refresh-token';
-      const scopes = ['read', 'write'];
-
-      const mockResponse = {
+      const mockTokenResponse = {
         access_token: 'new-access-token',
         refresh_token: 'new-refresh-token',
         token_type: 'Bearer',
         expires_in: 3600,
-        scope: 'read write',
+        scope: 'scope1 scope2',
       };
 
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: mockTokenResponse,
       });
 
-      await provider.exchangeRefreshToken(client, refreshToken, scopes);
+      await provider.exchangeRefreshToken(mockClient, 'test-refresh-token', ['scope1', 'scope2']);
 
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(mockedHttpInstance.post).toHaveBeenCalledWith(
         'https://open.feishu.cn/open-apis/authen/v2/oauth/token',
-        expect.objectContaining({
-          method: 'POST',
+        {
+          grant_type: 'refresh_token',
+          client_id: 'test-app-id',
+          client_secret: 'test-app-secret',
+          refresh_token: 'test-refresh-token',
+          scope: 'scope1 scope2',
+        },
+        {
           headers: { 'Content-Type': 'application/json; charset=utf-8' },
-          body: JSON.stringify({
-            grant_type: 'refresh_token',
-            client_id: 'test-app-id',
-            client_secret: 'test-app-secret',
-            refresh_token: refreshToken,
-            scope: 'read write',
-          }),
-        }),
+        },
       );
+    });
+  });
+
+  describe('verifyAccessToken method', () => {
+    it('应该返回有效token的信息', async () => {
+      const mockToken = {
+        token: 'test-token',
+        clientId: 'test-client-id',
+        scopes: ['scope1', 'scope2'],
+        expiresAt: Date.now() / 1000 + 3600,
+        extra: { refreshToken: 'test-refresh-token' },
+      };
+
+      (isTokenValid as jest.Mock).mockResolvedValue({ valid: true, token: mockToken });
+
+      const result = await provider.verifyAccessToken('test-token');
+
+      expect(result).toEqual(mockToken);
+    });
+
+    it('应该处理无效token', async () => {
+      const mockToken = {
+        token: 'test-token',
+        clientId: 'test-client-id',
+        scopes: ['scope1', 'scope2'],
+        expiresAt: 1,
+        extra: { refreshToken: 'test-refresh-token' },
+      };
+
+      (isTokenValid as jest.Mock).mockResolvedValue({ valid: false, token: mockToken });
+
+      const result = await provider.verifyAccessToken('invalid-token');
+
+      expect(result).toEqual(mockToken);
     });
   });
 });

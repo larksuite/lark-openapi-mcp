@@ -40,7 +40,7 @@ export const larkDocxBuiltinSearchTool: McpTool = {
       if (!userAccessToken) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: '当前未配置 userAccessToken' }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ msg: '当前未配置 userAccessToken' }) }],
         };
       }
 
@@ -57,7 +57,7 @@ export const larkDocxBuiltinSearchTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: `搜索文档请求成功: ${JSON.stringify(response.data ?? response)}`,
+            text: JSON.stringify(response.data ?? response),
           },
         ],
       };
@@ -67,7 +67,7 @@ export const larkDocxBuiltinSearchTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: `搜索文档请求失败: ${JSON.stringify((error as any).response.data)}`,
+            text: JSON.stringify((error as any).response.data),
           },
         ],
       };
@@ -111,7 +111,7 @@ export const larkDocxBuiltinImportTool: McpTool = {
       if (!response?.file_token) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: '导入文档失败，请检查markdown文件内容' }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ msg: '导入文档失败，请检查markdown文件内容' }) }],
         };
       }
 
@@ -135,7 +135,7 @@ export const larkDocxBuiltinImportTool: McpTool = {
       if (!taskId) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: '导入文档失败，请检查markdown文件内容' }],
+          content: [{ type: 'text' as const, text: JSON.stringify({ msg: '导入文档失败，请检查markdown文件内容' }) }],
         };
       }
 
@@ -150,13 +150,13 @@ export const larkDocxBuiltinImportTool: McpTool = {
             content: [
               {
                 type: 'text' as const,
-                text: `导入文档请求成功: ${JSON.stringify(taskResponse.data ?? taskResponse)}`,
+                text: JSON.stringify(taskResponse.data ?? taskResponse),
               },
             ],
           };
         } else if (taskResponse.data?.result?.job_status !== 1 && taskResponse.data?.result?.job_status !== 2) {
           return {
-            content: [{ type: 'text' as const, text: '导入文档失败，请稍后再试' + JSON.stringify(taskResponse.data) }],
+            content: [{ type: 'text' as const, text: JSON.stringify(taskResponse.data) }],
           };
         }
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -166,7 +166,7 @@ export const larkDocxBuiltinImportTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: '导入文档失败，请稍后再试',
+            text: JSON.stringify({ msg: '导入文档失败，请稍后再试' }),
           },
         ],
       };
@@ -176,7 +176,7 @@ export const larkDocxBuiltinImportTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: `导入文档请求失败: ${JSON.stringify((error as any)?.response?.data || error)}`,
+            text: JSON.stringify((error as any)?.response?.data || error),
           },
         ],
       };

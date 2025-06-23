@@ -17,13 +17,13 @@ export interface McpServerOptions {
   appId?: string;
   appSecret?: string;
   domain?: string;
-  tools?: string | string[];
+  tools?: string[];
   language?: 'zh' | 'en';
   toolNameCase?: larkmcp.ToolNameCase;
   tokenMode?: larkmcp.TokenMode;
-  userAccessToken?: string;
+  userAccessToken?: string | larkmcp.SettableValue;
   oauth?: boolean;
-  scope?: string;
+  scope?: string[];
 
   mode?: McpServerTransport;
   host?: string;

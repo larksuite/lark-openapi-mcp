@@ -108,7 +108,7 @@ describe('initStdioServer', () => {
 
     // 验证错误处理
     expect(connectErrorMock).toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalledWith('MCP Connect Error:', expect.any(Error));
+    expect(console.error).toHaveBeenCalledWith('[StdioServerTransport] MCP Connect Error: Error: Connection error');
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 

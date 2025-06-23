@@ -49,7 +49,7 @@ export const larkImBuiltinBatchSendTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: `批量发送消息请求成功: ${JSON.stringify(response.data ?? response)}`,
+            text: JSON.stringify(response.data ?? response),
           },
         ],
       };
@@ -59,7 +59,7 @@ export const larkImBuiltinBatchSendTool: McpTool = {
         content: [
           {
             type: 'text' as const,
-            text: `批量发送消息请求失败: ${JSON.stringify((error as any)?.response?.data || error)}`,
+            text: JSON.stringify((error as any)?.response?.data || error),
           },
         ],
       };

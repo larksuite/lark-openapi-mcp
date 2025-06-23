@@ -39,7 +39,7 @@ describe('LarkAuthHandlerLocal', () => {
       codeVerifier: 'test-verifier',
       codeChallenge: 'test-challenge',
     });
-    (isTokenValid as jest.Mock).mockReturnValue(true);
+    (isTokenValid as jest.Mock).mockResolvedValue({ valid: true, isExpired: false, token: {} });
     (mcpAuthRouter as jest.Mock).mockReturnValue((req: any, res: any, next: any) => next());
   });
 
@@ -57,7 +57,7 @@ describe('LarkAuthHandlerLocal', () => {
 
       const existingToken = 'valid-token';
       mockauthStore.getLocalAccessToken.mockResolvedValue(existingToken);
-      (isTokenValid as jest.Mock).mockReturnValue(true);
+      (isTokenValid as jest.Mock).mockResolvedValue({ valid: true, isExpired: false, token: {} });
 
       const result = await handler.reAuthorize();
 
@@ -110,7 +110,7 @@ describe('LarkAuthHandlerLocal', () => {
       const existingToken = 'existing-token';
       mockauthStore.getLocalAccessToken.mockResolvedValue(existingToken);
       mockauthStore.getClient.mockReturnValue(null);
-      (isTokenValid as jest.Mock).mockReturnValue(true);
+      (isTokenValid as jest.Mock).mockResolvedValue({ valid: true, isExpired: false, token: {} });
 
       // Mock server start/stop
       const mockServer = {
@@ -271,12 +271,12 @@ describe('LarkAuthHandlerLocal', () => {
       await handler['callback'](mockReq, mockRes);
 
       expect(mockProvider.exchangeAuthorizationCode).toHaveBeenCalledWith(
-        { client_id: 'LOCAL_CLIENT_ID', redirect_uris: [] },
+        { client_id: 'client_id_for_local_auth', redirect_uris: [] },
         'test-code',
         'test-verifier',
         'http://localhost:3000/callback',
       );
-      expect(mockauthStore.removeCodeVerifier).toHaveBeenCalledWith('LOCAL_CLIENT_ID');
+      expect(mockauthStore.removeCodeVerifier).toHaveBeenCalledWith('client_id_for_local_auth');
       expect(mockauthStore.storeLocalAccessToken).toHaveBeenCalledWith('new-access-token', 'test-app-id');
       expect(mockRes.end).toHaveBeenCalledWith('success, you can close this page now');
 
@@ -298,7 +298,7 @@ describe('LarkAuthHandlerLocal', () => {
       const handler = new LarkAuthHandlerLocal(mockApp, options);
 
       mockauthStore.getLocalAccessToken.mockResolvedValue(null);
-      mockauthStore.getClient.mockReturnValue({ client_id: 'LOCAL_CLIENT_ID' });
+      mockauthStore.getClient.mockReturnValue({ client_id: 'client_id_for_local_auth' });
 
       // Mock server start/stop
       const mockServer = {
@@ -319,7 +319,7 @@ describe('LarkAuthHandlerLocal', () => {
 
       expect(result.accessToken).toBe('');
       expect(result.authorizeUrl).toContain('http://localhost:3000/authorize');
-      expect(mockauthStore.registerClient).not.toHaveBeenCalled();
+      expect(mockauthStore.registerClient).toHaveBeenCalled();
       expect(mockauthStore.storeCodeVerifier).toHaveBeenCalled();
 
       // Restore setTimeout
@@ -335,7 +335,7 @@ describe('LarkAuthHandlerLocal', () => {
         domain: 'test.domain.com',
         appId: 'test-app-id',
         appSecret: 'test-app-secret',
-        scope: 'read write',
+        scope: ['read', 'write'],
       };
 
       const handler = new LarkAuthHandlerLocal(mockApp, options);
@@ -531,7 +531,9 @@ describe('LarkAuthHandlerLocal', () => {
       // Wait for setTimeout callback to execute
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error stopping server:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        '[LarkAuthHandlerLocal] callback: Error stopping server: Error: Stop server error',
+      );
 
       // Restore mocks
       stopServerSpy.mockRestore();

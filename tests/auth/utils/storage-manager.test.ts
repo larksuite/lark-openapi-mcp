@@ -18,7 +18,7 @@ describe('StorageManager', () => {
   let storageManager: StorageManager;
   let mockEncryptInstance: jest.Mocked<EncryptionUtil>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Mock EncryptionUtil
@@ -41,22 +41,27 @@ describe('StorageManager', () => {
     mockFs.writeFileSync.mockReturnValue(undefined);
 
     storageManager = new StorageManager();
+
+    // Wait for auto-initialization to complete
+    await new Promise((resolve) => setTimeout(resolve, 10));
   });
 
   describe('initialization', () => {
-    it('should initialize with existing AES key', async () => {
+    it('should auto-initialize with existing AES key', async () => {
       mockKeytar.getPassword.mockResolvedValue('existing-key');
 
-      await storageManager.initialize();
+      const manager = new StorageManager();
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockKeytar.getPassword).toHaveBeenCalledWith(AUTH_CONFIG.SERVER_NAME, AUTH_CONFIG.AES_KEY_NAME);
       expect(MockEncryptionUtil).toHaveBeenCalledWith('existing-key');
     });
 
-    it('should generate new AES key if none exists', async () => {
+    it('should auto-initialize and generate new AES key if none exists', async () => {
       mockKeytar.getPassword.mockResolvedValue(null);
 
-      await storageManager.initialize();
+      const manager = new StorageManager();
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(MockEncryptionUtil.generateKey).toHaveBeenCalled();
       expect(mockKeytar.setPassword).toHaveBeenCalledWith(
@@ -67,63 +72,68 @@ describe('StorageManager', () => {
       expect(MockEncryptionUtil).toHaveBeenCalledWith('mock-key');
     });
 
-    it('should create storage directory if it does not exist', async () => {
+    it('should create storage directory if it does not exist during auto-initialization', async () => {
       mockFs.existsSync.mockReturnValue(false);
 
-      await storageManager.initialize();
+      const manager = new StorageManager();
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockFs.mkdirSync).toHaveBeenCalledWith(AUTH_CONFIG.STORAGE_DIR, { recursive: true });
     });
 
-    it('should not create storage directory if it exists', async () => {
-      mockFs.existsSync.mockReturnValue(true);
+    it('should not create storage directory if it exists during auto-initialization', async () => {
+      // Clear previous mocks first
+      jest.clearAllMocks();
 
-      await storageManager.initialize();
+      mockFs.existsSync.mockImplementation((path) => {
+        // Return true for the storage directory path to simulate it exists
+        return path === AUTH_CONFIG.STORAGE_DIR;
+      });
+      mockKeytar.getPassword.mockResolvedValue('existing-key');
+
+      const manager = new StorageManager();
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(mockFs.mkdirSync).not.toHaveBeenCalled();
     });
 
-    it('should not initialize twice', async () => {
-      await storageManager.initialize();
-      await storageManager.initialize(); // Second call should be ignored
-
-      expect(mockKeytar.getPassword).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle keytar errors during initialization', async () => {
+    it('should handle keytar errors during auto-initialization', async () => {
       mockKeytar.getPassword.mockRejectedValue(new Error('Keytar error'));
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      await expect(storageManager.initialize()).rejects.toThrow('Keytar error');
+      const manager = new StorageManager();
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to initialize encryption:', expect.any(Error));
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to initialize StorageManager:', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith('[StorageManager] Failed to initialize encryption: Error: Keytar error');
+      expect(consoleSpy).toHaveBeenCalledWith('[StorageManager] Failed to initialize: Error: Keytar error');
 
       consoleSpy.mockRestore();
     });
 
-    it('should handle keytar setPassword errors during initialization', async () => {
+    it('should handle keytar setPassword errors during auto-initialization', async () => {
       mockKeytar.getPassword.mockResolvedValue(null);
       mockKeytar.setPassword.mockRejectedValue(new Error('Keytar setPassword error'));
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      await expect(storageManager.initialize()).rejects.toThrow('Keytar setPassword error');
+      const manager = new StorageManager();
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to initialize encryption:', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[StorageManager] Failed to initialize encryption: Error: Keytar setPassword error',
+      );
 
       consoleSpy.mockRestore();
     });
   });
 
   describe('encryption/decryption', () => {
-    beforeEach(async () => {
-      await storageManager.initialize();
-    });
-
-    it('should encrypt data', () => {
+    it('should encrypt data after auto-initialization', async () => {
       mockEncryptInstance.encrypt.mockReturnValue('encrypted-data');
+
+      // Wait for auto-initialization
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const result = storageManager.encrypt('test-data');
 
@@ -131,8 +141,11 @@ describe('StorageManager', () => {
       expect(result).toBe('encrypted-data');
     });
 
-    it('should decrypt data', () => {
+    it('should decrypt data after auto-initialization', async () => {
       mockEncryptInstance.decrypt.mockReturnValue('decrypted-data');
+
+      // Wait for auto-initialization
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const result = storageManager.decrypt('encrypted-data');
 
@@ -140,19 +153,21 @@ describe('StorageManager', () => {
       expect(result).toBe('decrypted-data');
     });
 
-    it('should throw error if not initialized', () => {
-      const uninitializedManager = new StorageManager();
+    it('should throw error if initialization failed', async () => {
+      mockKeytar.getPassword.mockRejectedValue(new Error('Keytar error'));
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      expect(() => uninitializedManager.encrypt('data')).toThrow('StorageManager not initialized');
-      expect(() => uninitializedManager.decrypt('data')).toThrow('StorageManager not initialized');
+      const failedManager = new StorageManager();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(() => failedManager.encrypt('data')).toThrow('StorageManager not initialized');
+      expect(() => failedManager.decrypt('data')).toThrow('StorageManager not initialized');
+
+      consoleSpy.mockRestore();
     });
   });
 
   describe('storage operations', () => {
-    beforeEach(async () => {
-      await storageManager.initialize();
-    });
-
     it('should load storage data from file', async () => {
       const mockData = { tokens: {}, clients: {} };
       const storageFile = path.join(AUTH_CONFIG.STORAGE_DIR, AUTH_CONFIG.STORAGE_FILE);
@@ -187,7 +202,7 @@ describe('StorageManager', () => {
       const result = await storageManager.loadStorageData();
 
       expect(result).toEqual({ tokens: {}, clients: {} });
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to load storage data:', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith('[StorageManager] Failed to load storage data: Error: Read error');
 
       consoleSpy.mockRestore();
     });
@@ -254,24 +269,32 @@ describe('StorageManager', () => {
       expect(mockFs.writeFileSync).toHaveBeenCalled();
     });
 
-    it('should auto-initialize when loading storage data', async () => {
-      const uninitializedManager = new StorageManager();
+    it('should return empty data when initialization failed and file does not exist', async () => {
+      mockKeytar.getPassword.mockRejectedValue(new Error('Keytar error'));
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      const failedManager = new StorageManager();
       mockFs.existsSync.mockReturnValue(false);
 
-      const result = await uninitializedManager.loadStorageData();
+      const result = await failedManager.loadStorageData();
 
       expect(result).toEqual({ tokens: {}, clients: {} });
-      expect(mockKeytar.getPassword).toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
 
-    it('should auto-initialize when saving storage data', async () => {
-      const uninitializedManager = new StorageManager();
+    it('should skip saving when initialization failed', async () => {
+      mockKeytar.getPassword.mockRejectedValue(new Error('Keytar error'));
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      const failedManager = new StorageManager();
       const mockData = { tokens: {}, clients: {} };
 
-      await uninitializedManager.saveStorageData(mockData);
+      await failedManager.saveStorageData(mockData);
 
-      expect(mockKeytar.getPassword).toHaveBeenCalled();
-      expect(mockFs.writeFileSync).toHaveBeenCalled();
+      expect(mockFs.writeFileSync).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
   });
 });

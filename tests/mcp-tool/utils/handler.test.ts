@@ -59,7 +59,7 @@ describe('larkOapiHandler', () => {
       content: [
         {
           type: 'text',
-          text: expect.stringContaining('Success'),
+          text: '{"message_id":"123"}',
         },
       ],
     });
@@ -160,7 +160,7 @@ describe('larkOapiHandler', () => {
     const result = await larkOapiHandler(mockClient as any, params, { tool });
 
     // 验证结果
-    expect(result.content[0].text).toContain('Success');
+    expect(result.content[0].text).toBe('{"success":true}');
     expect(mockClient.request).toHaveBeenCalled();
   });
 
@@ -190,7 +190,7 @@ describe('larkOapiHandler', () => {
       content: [
         {
           type: 'text',
-          text: expect.stringContaining('Success'),
+          text: '{"content":"document content"}',
         },
       ],
     });
@@ -212,7 +212,7 @@ describe('larkOapiHandler', () => {
 
     // 验证结果
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('UserAccessToken is invalid or expired');
+    expect(result.content[0].text).toBe('"UserAccessToken is invalid or expired"');
   });
 
   it('应该测试error处理', async () => {
@@ -232,7 +232,7 @@ describe('larkOapiHandler', () => {
 
     // 验证结果
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('API error');
+    expect(result.content[0].text).toBe('"API error"');
   });
 
   it('应该测试error undefined处理', async () => {
@@ -271,7 +271,7 @@ describe('larkOapiHandler', () => {
 
     // 验证结果
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('API error');
+    expect(result.content[0].text).toBe('"API error"');
   });
 
   it('应该测试error response处理', async () => {
@@ -291,7 +291,7 @@ describe('larkOapiHandler', () => {
 
     // 验证结果
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('API error');
+    expect(result.content[0].text).toBe('{"code":123,"msg":"API error"}');
   });
 
   it('应该处理缺少options参数的情况', async () => {
@@ -300,8 +300,7 @@ describe('larkOapiHandler', () => {
     // 调用函数但不传options参数
     const result = await larkOapiHandler(mockClient as any, params, undefined as any);
     // 验证结果，应该处理错误
-    expect(result.content[0].text).toContain('Error');
-    expect(result.content[0].text).toContain('Invalid sdkName');
+    expect(result.content[0].text).toBe('"Invalid sdkName"');
   });
 
   it('应该有userAccessToken，没有params', async () => {

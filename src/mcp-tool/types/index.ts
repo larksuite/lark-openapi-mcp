@@ -73,3 +73,9 @@ export interface LarkMcpToolOptions extends LarkClientOptions {
   tokenMode?: TokenMode;
   oauth?: boolean;
 }
+
+export interface SettableValue {
+  value?: string;
+  getter?: () => Promise<string | undefined>;
+  setter?: (value?: string) => Promise<void>;
+}

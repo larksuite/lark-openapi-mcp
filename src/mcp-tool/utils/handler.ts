@@ -1,11 +1,13 @@
 import * as lark from '@larksuiteoapi/node-sdk';
 import { McpHandler, McpHandlerOptions } from '../types';
+import { logger } from '../../utils/logger';
 
 const sdkFuncCall = async (client: lark.Client, params: any, options: McpHandlerOptions) => {
   const { tool, userAccessToken } = options || {};
   const { sdkName, path, httpMethod } = tool || {};
 
   if (!sdkName) {
+    logger.error(`[larkOapiHandler] Invalid sdkName`);
     throw new Error('Invalid sdkName');
   }
 
@@ -26,6 +28,7 @@ const sdkFuncCall = async (client: lark.Client, params: any, options: McpHandler
 
   if (params?.useUAT) {
     if (!userAccessToken) {
+      logger.error(`[larkOapiHandler] UserAccessToken is invalid or expired`);
       throw new Error('UserAccessToken is invalid or expired');
     }
     return await func(params, lark.withUserAccessToken(userAccessToken));
@@ -40,7 +43,7 @@ export const larkOapiHandler: McpHandler = async (client, params, options) => {
       content: [
         {
           type: 'text' as const,
-          text: `Success: ${JSON.stringify(response?.data ?? response)}`,
+          text: JSON.stringify(response?.data ?? response),
         },
       ],
     };
@@ -50,7 +53,7 @@ export const larkOapiHandler: McpHandler = async (client, params, options) => {
       content: [
         {
           type: 'text' as const,
-          text: `Error: ${JSON.stringify((error as any)?.response?.data || (error as any)?.message || error)}`,
+          text: JSON.stringify((error as any)?.response?.data || (error as any)?.message || error),
         },
       ],
     };

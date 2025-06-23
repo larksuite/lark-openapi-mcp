@@ -3,6 +3,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { InitTransportServerFunction } from '../shared';
 import { parseMCPServerOptionsFromRequest, sendJsonRpcError } from './utils';
 import { LarkAuthHandler } from '../../auth';
+import { logger } from '../../utils/logger';
 
 export const initStreamableServer: InitTransportServerFunction = (getNewServer, options) => {
   const { port, host } = options;
@@ -54,6 +55,7 @@ export const initStreamableServer: InitTransportServerFunction = (getNewServer, 
   app.get('/mcp', async (req: Request, res: Response) => {
     try {
       console.log('Received GET MCP request');
+      logger.info(`[StreamableServerTransport] Received GET MCP request`);
       await handleMethodNotAllowed(req, res);
     } catch (error) {
       sendJsonRpcError(res, error as Error);
@@ -63,6 +65,7 @@ export const initStreamableServer: InitTransportServerFunction = (getNewServer, 
   app.delete('/mcp', async (req: Request, res: Response) => {
     try {
       console.log('Received DELETE MCP request');
+      logger.info(`[StreamableServerTransport] Received DELETE MCP request`);
       await handleMethodNotAllowed(req, res);
     } catch (error) {
       sendJsonRpcError(res, error as Error);
@@ -71,9 +74,10 @@ export const initStreamableServer: InitTransportServerFunction = (getNewServer, 
 
   app.listen(port, host, (error) => {
     if (error) {
-      console.error('Server error:', error);
+      logger.error(`[StreamableServerTransport] Server error: ${error}`);
       process.exit(1);
     }
     console.log(`📡 Streamable endpoint: http://${host}:${port}/mcp`);
+    logger.info(`[StreamableServerTransport] Streamable endpoint: http://${host}:${port}/mcp`);
   });
 };

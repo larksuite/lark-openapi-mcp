@@ -460,7 +460,7 @@ describe('initStreamableServer', () => {
     initStreamableServer(getMockServer, options);
 
     // 验证错误被记录并且进程退出
-    expect(console.error).toHaveBeenCalledWith('Server error:', expect.any(Error));
+    expect(console.error).toHaveBeenCalledWith('[StreamableServerTransport] Server error: Error: Port already in use');
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 

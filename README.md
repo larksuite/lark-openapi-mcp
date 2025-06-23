@@ -198,7 +198,9 @@ The following table details each API tool and its inclusion in different preset 
 | `--app-id` | `-a` | Feishu/Lark application App ID | `-a cli_xxxx` |
 | `--app-secret` | `-s` | Feishu/Lark application App Secret | `-s xxxx` |
 | `--domain` | `-d` | Feishu/Lark API domain, default is https://open.feishu.cn | `-d https://open.larksuite.com` |
-| `--scope` |  | Specify OAuth scope for user access token, default is all permissions granted to the app, separated by spaces | `--scope offline_access docx:document` |
+| `--host` |  | Host to listen, default is localhost | `--host localhost` |
+| `--port` | `-p` | Port to listen, default is 3000 | `-p 3000` |
+| `--scope` |  | Specify OAuth scope for user access token, default is all permissions granted to the app, separated by spaces or commas | `--scope offline_access docx:document` |
 
 **`lark-mcp logout` Command Parameters**:
 
@@ -215,13 +217,13 @@ This command is used to clear locally stored user access tokens. If the `--app-i
 | `--app-id` | `-a` | Feishu/Lark application App ID | `-a cli_xxxx` |
 | `--app-secret` | `-s` | Feishu/Lark application App Secret | `-s xxxx` |
 | `--domain` | `-d` | Feishu/Lark API domain, default is https://open.feishu.cn | `-d https://open.larksuite.com` |
-| `--tools` | `-t` | List of API tools to enable, separated by commas | `-t im.v1.message.create,im.v1.chat.create` |
+| `--tools` | `-t` | List of API tools to enable, separated by spaces or commas | `-t im.v1.message.create,im.v1.chat.create` |
 | `--tool-name-case` | `-c` | Tool name format, options are snake, camel, dot, or kebab, default is snake | `-c camel` |
 | `--language` | `-l` | Tools language, options are zh or en, default is en | `-l zh` |
 | `--user-access-token` | `-u` | User access token for calling APIs as a user | `-u u-xxxx` |
 | `--token-mode` |  | API token type, options are auto, tenant_access_token, or user_access_token, default is auto | `--token-mode user_access_token` |
 | `--oauth` |  | Enable MCP Auth Server to get user_access_token and auto request user login when token expires (Beta) | `--oauth` |
-| `--scope` |  | Specify OAuth scope for user access token, default is all permissions granted to the app, separated by spaces | `--scope offline_access docx:document` |
+| `--scope` |  | Specify OAuth scope for user access token, default is all permissions granted to the app, separated by spaces or commas | `--scope offline_access docx:document` |
 | `--mode` | `-m` | Transport mode, options are stdio, streamable, or sse, default is stdio | `-m streamable` |
 | `--host` |  | Listening host in SSE/Streamable mode, default is localhost | `--host 0.0.0.0` |
 | `--port` | `-p` | Listening port in SSE/Streamable mode, default is 3000 | `-p 3000` |

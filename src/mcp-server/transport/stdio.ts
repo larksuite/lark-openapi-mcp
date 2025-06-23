@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { InitTransportServerFunction } from '../shared';
 import { authStore } from '../../auth';
 import { LarkAuthHandlerLocal } from '../../auth';
+import { logger } from '../../utils/logger';
 
 export const initStdioServer: InitTransportServerFunction = async (getNewServer, options) => {
   const { userAccessToken, appId } = options;
@@ -16,20 +17,20 @@ export const initStdioServer: InitTransportServerFunction = async (getNewServer,
   }
 
   const transport = new StdioServerTransport();
-  const mcpServer = getNewServer(
-    {
-      ...options,
-      userAccessToken: userAccessToken
-        ? userAccessToken
-        : appId
-          ? await authStore.getLocalAccessToken(appId)
-          : undefined,
-    },
-    authHandler,
-  );
 
+  const userAccessTokenValue = userAccessToken
+    ? userAccessToken
+    : appId
+      ? { getter: async () => await authStore.getLocalAccessToken(appId) }
+      : undefined;
+
+  const mcpServer = getNewServer({ ...options, userAccessToken: userAccessTokenValue }, authHandler);
+
+  logger.info(
+    `[StdioServerTransport] Connecting to MCP Server, userAccessToken: ${Boolean(userAccessToken)}, appId: ${appId}`,
+  );
   mcpServer.connect(transport).catch((error) => {
-    console.error('MCP Connect Error:', error);
+    logger.error(`[StdioServerTransport] MCP Connect Error: ${error}`);
     process.exit(1);
   });
 };

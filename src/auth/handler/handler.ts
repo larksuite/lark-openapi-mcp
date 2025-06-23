@@ -4,6 +4,7 @@ import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { LarkOIDC2OAuthServerProvider, LarkOAuth2OAuthServerProvider } from '../provider';
 import { authStore } from '../store';
 import { generatePKCEPair } from '../utils/pkce';
+import { logger } from '../../utils/logger';
 
 export interface LarkOAuthClientConfig {
   port: number;
@@ -13,7 +14,7 @@ export interface LarkOAuthClientConfig {
   appId: string;
   appSecret: string;
 
-  scope?: string;
+  scope?: string[];
 }
 
 export class LarkAuthHandler {
@@ -22,6 +23,10 @@ export class LarkAuthHandler {
 
   get callbackUrl() {
     return `http://${this.options.host}:${this.options.port}/callback`;
+  }
+
+  get issuerUrl() {
+    return `http://${this.options.host}:${this.options.port}`;
   }
 
   constructor(
@@ -45,7 +50,7 @@ export class LarkAuthHandler {
       callbackUrl: this.callbackUrl,
     };
 
-    if (!this.options.scope?.trim()) {
+    if (!this.options.scope?.length) {
       this.provider = new LarkOIDC2OAuthServerProvider(params);
     } else {
       this.provider = new LarkOAuth2OAuthServerProvider(params);
@@ -63,12 +68,14 @@ export class LarkAuthHandler {
 
     if (req.query.state === 'reauthorize') {
       if (!req.query.code || typeof req.query.code !== 'string') {
+        logger.error(`[LarkAuthHandler] Failed to exchange authorization code: ${req.query.code}`);
         res.end('error, failed to exchange authorization code, please try again');
         return;
       }
 
       const codeVerifier = authStore.getCodeVerifier('reauthorize');
       if (!codeVerifier) {
+        logger.error(`[LarkAuthHandler] Code verifier not found`);
         res.end('error: code_verifier not found, please try again');
         return;
       }
@@ -81,17 +88,16 @@ export class LarkAuthHandler {
       );
 
       authStore.removeCodeVerifier('reauthorize');
+
+      logger.info(`[LarkAuthHandler] callback: Successfully exchanged authorization code`);
       res.end('success, you can close this page now');
     }
   }
 
   setupRoutes = (): void => {
-    this.app.use(
-      mcpAuthRouter({
-        provider: this.provider,
-        issuerUrl: new URL(`http://${this.options.host}:${this.options.port}`),
-      }),
-    );
+    logger.info(`[LarkAuthHandler] setupRoutes: issuerUrl: ${this.issuerUrl}`);
+
+    this.app.use(mcpAuthRouter({ provider: this.provider, issuerUrl: new URL(this.issuerUrl) }));
     this.app.get('/callback', (req, res) => this.callback(req, res));
   };
 
@@ -102,20 +108,21 @@ export class LarkAuthHandler {
   async refreshToken(accessToken: string) {
     const token = await authStore.getToken(accessToken);
     if (!token) {
+      logger.error(`[LarkAuthHandler] refreshToken: No local access token found`);
       throw new Error('No local access token found');
     }
     if (!token.extra?.refreshToken) {
+      logger.error(`[LarkAuthHandler] refreshToken: No refresh token found`);
       throw new Error('No refresh token found');
     }
 
     const newToken = await this.provider.exchangeRefreshToken(
-      {
-        client_id: token.clientId,
-        redirect_uris: [this.callbackUrl],
-      },
+      { client_id: token.clientId, redirect_uris: [this.callbackUrl] },
       token.extra?.refreshToken as string,
       token.scopes,
     );
+
+    logger.info(`[LarkAuthHandler] refreshToken: Successfully refreshed token`);
 
     await authStore.removeToken(accessToken);
     return newToken;
@@ -123,11 +130,13 @@ export class LarkAuthHandler {
 
   async reAuthorize(accessToken?: string) {
     if (!accessToken) {
+      logger.error(`[LarkAuthHandler] reAuthorize: Invalid access token, please reconnect the mcp server`);
       throw new Error('Invalid access token, please reconnect the mcp server');
     }
 
     const token = await authStore.getToken(accessToken);
     if (!token) {
+      logger.error(`[LarkAuthHandler] reAuthorize: Invalid access token, please reconnect the mcp server`);
       throw new Error('Invalid access token, please reconnect the mcp server');
     }
 
@@ -145,7 +154,7 @@ export class LarkAuthHandler {
     authorizeUrl.searchParams.set('redirect_uri', this.callbackUrl);
     authorizeUrl.searchParams.set('state', 'reauthorize');
     if (this.options.scope) {
-      authorizeUrl.searchParams.set('scope', this.options.scope);
+      authorizeUrl.searchParams.set('scope', this.options.scope.join(' '));
     }
     return {
       accessToken: '',
