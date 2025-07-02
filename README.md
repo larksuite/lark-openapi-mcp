@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/larksuite-lark-openapi-mcp-badge.png)](https://mseep.ai/app/larksuite-lark-openapi-mcp)
+
 # Feishu/Lark OpenAPI MCP
 
 [![npm version](https://img.shields.io/npm/v/@larksuiteoapi/lark-mcp.svg)](https://www.npmjs.com/package/@larksuiteoapi/lark-mcp)
