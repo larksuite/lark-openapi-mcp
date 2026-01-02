@@ -32,6 +32,9 @@ Thumbs.db
 
 # Test
 coverage/
-.nyc_output/ 
+.nyc_output/
 
 api-json
+
+# User configs with credentials (do not commit)
+your-configs/
