@@ -29,7 +29,7 @@ export class LarkAuthHandlerLocal extends LarkAuthHandler {
     });
   }
 
-  private async stopServer() {
+  async stopServer() {
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
       this.timeoutId = null;
