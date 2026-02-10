@@ -532,13 +532,87 @@ describe('LarkAuthHandlerLocal', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[LarkAuthHandlerLocal] callback: Error stopping server: Error: Stop server error',
+        '[ERROR] [LarkAuthHandlerLocal] callback: Error stopping server: Error: Stop server error',
       );
 
       // Restore mocks
       stopServerSpy.mockRestore();
       consoleErrorSpy.mockRestore();
       jest.restoreAllMocks();
+    });
+  });
+
+  describe('stopServer public method', () => {
+    it('应该将stopServer作为公开方法暴露', () => {
+      const options = {
+        port: 3000,
+        host: 'localhost',
+        domain: 'test.domain.com',
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      const handler = new LarkAuthHandlerLocal(mockApp, options);
+
+      // 验证stopServer方法存在且可访问
+      expect(handler.stopServer).toBeDefined();
+      expect(typeof handler.stopServer).toBe('function');
+    });
+
+    it('应该能够从外部调用stopServer方法', async () => {
+      const options = {
+        port: 3000,
+        host: 'localhost',
+        domain: 'test.domain.com',
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      const handler = new LarkAuthHandlerLocal(mockApp, options);
+
+      // 设置模拟的服务器
+      const mockServer = {
+        close: jest.fn((callback) => callback()),
+      };
+      (handler as any).expressServer = mockServer;
+
+      // 从外部调用stopServer（就像在stdio transport的cleanup函数中那样）
+      const result = await handler.stopServer();
+
+      expect(result).toBe(true);
+      expect(mockServer.close).toHaveBeenCalled();
+    });
+
+    it('应该在cleanup函数中成功调用公开的stopServer方法', async () => {
+      const options = {
+        port: 3000,
+        host: 'localhost',
+        domain: 'test.domain.com',
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      const handler = new LarkAuthHandlerLocal(mockApp, options);
+
+      // 模拟服务器
+      const mockServer = {
+        close: jest.fn((callback) => callback()),
+      };
+      (handler as any).expressServer = mockServer;
+
+      // 模拟cleanup函数的逻辑（类似stdio.ts中的cleanup）
+      const mockCleanup = async () => {
+        if (handler && 'stopServer' in handler) {
+          await handler.stopServer();
+        }
+      };
+
+      // 执行cleanup
+      await mockCleanup();
+
+      // 验证stopServer被成功调用
+      expect(mockServer.close).toHaveBeenCalled();
+      expect((handler as any).expressServer).toBeNull();
     });
   });
 });

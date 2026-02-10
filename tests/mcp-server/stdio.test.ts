@@ -62,6 +62,12 @@ describe('initStdioServer', () => {
 
     // 清除所有模拟
     jest.restoreAllMocks();
+
+    // 清理事件监听器以避免内存泄漏警告
+    process.removeAllListeners('SIGINT');
+    process.removeAllListeners('SIGTERM');
+    process.stdin.removeAllListeners('close');
+    process.stdin.removeAllListeners('end');
   });
 
   it('应该初始化MCP服务器并连接', async () => {
@@ -110,7 +116,7 @@ describe('initStdioServer', () => {
 
     // 验证错误处理
     expect(connectErrorMock).toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalledWith('[StdioServerTransport] MCP Connect Error: Error: Connection error');
+    expect(console.error).toHaveBeenCalledWith('[ERROR] [StdioServerTransport] MCP Connect Error: Error: Connection error');
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
@@ -246,5 +252,223 @@ describe('initStdioServer', () => {
     // 验证传递了正确的选项和认证处理器
     expect(serverOptions).toEqual(expect.objectContaining(options));
     expect(authHandler).toBeDefined();
+  });
+
+  describe('Graceful shutdown handling', () => {
+    it('应该注册SIGINT信号处理器', async () => {
+      const processOnSpy = jest.spyOn(process, 'on');
+
+      const options: McpServerOptions = {
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      const mockServer = {
+        connect: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn(),
+      };
+
+      const getNewServerMock = jest.fn().mockReturnValue(mockServer);
+
+      await initStdioServer(getNewServerMock, options);
+
+      // 验证SIGINT处理器被注册
+      expect(processOnSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
+
+      processOnSpy.mockRestore();
+    });
+
+    it('应该注册SIGTERM信号处理器', async () => {
+      const processOnSpy = jest.spyOn(process, 'on');
+
+      const options: McpServerOptions = {
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      const mockServer = {
+        connect: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn(),
+      };
+
+      const getNewServerMock = jest.fn().mockReturnValue(mockServer);
+
+      await initStdioServer(getNewServerMock, options);
+
+      // 验证SIGTERM处理器被注册
+      expect(processOnSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
+
+      processOnSpy.mockRestore();
+    });
+
+    it('应该注册stdin close事件处理器', async () => {
+      const stdinOnSpy = jest.spyOn(process.stdin, 'on');
+
+      const options: McpServerOptions = {
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      const mockServer = {
+        connect: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn(),
+      };
+
+      const getNewServerMock = jest.fn().mockReturnValue(mockServer);
+
+      await initStdioServer(getNewServerMock, options);
+
+      // 验证stdin close处理器被注册
+      expect(stdinOnSpy).toHaveBeenCalledWith('close', expect.any(Function));
+
+      stdinOnSpy.mockRestore();
+    });
+
+    it('应该注册stdin end事件处理器', async () => {
+      const stdinOnSpy = jest.spyOn(process.stdin, 'on');
+
+      const options: McpServerOptions = {
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      const mockServer = {
+        connect: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn(),
+      };
+
+      const getNewServerMock = jest.fn().mockReturnValue(mockServer);
+
+      await initStdioServer(getNewServerMock, options);
+
+      // 验证stdin end处理器被注册
+      expect(stdinOnSpy).toHaveBeenCalledWith('end', expect.any(Function));
+
+      stdinOnSpy.mockRestore();
+    });
+
+    it('应该在cleanup时调用authHandler.stopServer', async () => {
+      const { LarkAuthHandlerLocal } = require('../../src/auth');
+      const mockStopServer = jest.fn().mockResolvedValue(undefined);
+
+      // 重新模拟 LarkAuthHandlerLocal
+      (LarkAuthHandlerLocal as jest.Mock).mockImplementation(() => ({
+        setupRoutes: jest.fn(),
+        stopServer: mockStopServer,
+      }));
+
+      const options: McpServerOptions = {
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+        oauth: true,
+      };
+
+      const mockServer = {
+        connect: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn(),
+      };
+
+      const getNewServerMock = jest.fn().mockReturnValue(mockServer);
+      const processOnSpy = jest.spyOn(process, 'on');
+
+      await initStdioServer(getNewServerMock, options, { needAuthFlow: true });
+
+      // 获取注册的cleanup函数
+      const sigintCall = processOnSpy.mock.calls.find((call) => call[0] === 'SIGINT');
+      expect(sigintCall).toBeDefined();
+      const cleanupFn = sigintCall![1] as Function;
+
+      // 调用cleanup函数
+      cleanupFn();
+
+      // 等待异步操作完成
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // 验证stopServer被调用
+      expect(mockStopServer).toHaveBeenCalled();
+      expect(process.exit).toHaveBeenCalledWith(0);
+
+      processOnSpy.mockRestore();
+    });
+
+    it('应该防止cleanup被多次执行', async () => {
+      const options: McpServerOptions = {
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      const mockServer = {
+        connect: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn(),
+      };
+
+      const getNewServerMock = jest.fn().mockReturnValue(mockServer);
+      const processOnSpy = jest.spyOn(process, 'on');
+
+      await initStdioServer(getNewServerMock, options);
+
+      // 获取注册的cleanup函数
+      const sigintCall = processOnSpy.mock.calls.find((call) => call[0] === 'SIGINT');
+      expect(sigintCall).toBeDefined();
+      const cleanupFn = sigintCall![1] as Function;
+
+      // 第一次调用cleanup
+      cleanupFn();
+      expect(process.exit).toHaveBeenCalledTimes(1);
+
+      // 第二次调用cleanup（应该被阻止）
+      cleanupFn();
+      // process.exit仍然只应该被调用1次
+      expect(process.exit).toHaveBeenCalledTimes(1);
+
+      processOnSpy.mockRestore();
+    });
+
+    it('应该在authHandler.stopServer出错时记录错误并继续退出', async () => {
+      const { LarkAuthHandlerLocal } = require('../../src/auth');
+      const mockStopServer = jest.fn().mockRejectedValue(new Error('Stop server failed'));
+
+      // 重新模拟 LarkAuthHandlerLocal
+      (LarkAuthHandlerLocal as jest.Mock).mockImplementation(() => ({
+        setupRoutes: jest.fn(),
+        stopServer: mockStopServer,
+      }));
+
+      const options: McpServerOptions = {
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+        oauth: true,
+      };
+
+      const mockServer = {
+        connect: jest.fn().mockResolvedValue(undefined),
+        close: jest.fn(),
+      };
+
+      const getNewServerMock = jest.fn().mockReturnValue(mockServer);
+      const processOnSpy = jest.spyOn(process, 'on');
+
+      await initStdioServer(getNewServerMock, options, { needAuthFlow: true });
+
+      // 获取注册的cleanup函数
+      const sigintCall = processOnSpy.mock.calls.find((call) => call[0] === 'SIGINT');
+      expect(sigintCall).toBeDefined();
+      const cleanupFn = sigintCall![1] as Function;
+
+      // 调用cleanup函数
+      cleanupFn();
+
+      // 等待异步操作完成
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // 验证错误被记录
+      expect(console.error).toHaveBeenCalledWith(
+        '[ERROR] [StdioServerTransport] Error stopping auth server: Error: Stop server failed',
+      );
+      // 验证仍然调用了process.exit
+      expect(process.exit).toHaveBeenCalledWith(0);
+
+      processOnSpy.mockRestore();
+    });
   });
 });

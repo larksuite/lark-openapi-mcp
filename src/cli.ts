@@ -12,6 +12,17 @@ import { LogLevel, logger } from './utils/logger';
 
 dotenv.config();
 
+// Global error handling to prevent orphaned processes
+process.on('uncaughtException', (error) => {
+  logger.error(`[CLI] Uncaught Exception: ${error}`);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error(`[CLI] Unhandled Rejection: ${reason}`);
+  process.exit(1);
+});
+
 const program = new Command();
 
 program.name('lark-mcp').description('Feishu/Lark MCP Tool').version(currentVersion);
