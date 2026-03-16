@@ -10,7 +10,7 @@ export interface LarkOAuthClientConfig {
   port: number;
   host: string;
   domain: string;
-
+  callbackHost?: string;
   appId: string;
   appSecret: string;
 
@@ -22,11 +22,19 @@ export class LarkAuthHandler {
   protected readonly provider: LarkOIDC2OAuthServerProvider | LarkOAuth2OAuthServerProvider;
 
   get callbackUrl() {
-    return `http://${this.options.host}:${this.options.port}/callback`;
+    const h = this.options.callbackHost;
+    if (h && h !== 'localhost') {
+      return `https://${h}/callback`;
+    }
+    return `http://localhost:${this.options.port}/callback`;
   }
 
   get issuerUrl() {
-    return `http://${this.options.host}:${this.options.port}`;
+    const h = this.options.callbackHost;
+    if (h && h !== 'localhost') {
+      return `https://${h}`;
+    }
+    return `http://localhost:${this.options.port}`;
   }
 
   constructor(

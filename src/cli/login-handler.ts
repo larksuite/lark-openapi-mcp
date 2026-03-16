@@ -10,6 +10,7 @@ export interface LoginOptions {
   domain: string;
   host: string;
   port: string;
+  callbackHost?: string;
   scope?: string[];
   timeout?: number;
 }
@@ -34,7 +35,7 @@ export class LoginHandler {
   }
 
   static async handleLogin(options: LoginOptions): Promise<void> {
-    const { appId, appSecret, domain, host, port, scope, timeout = 60000 } = options;
+    const { appId, appSecret, domain, host, callbackHost, port, scope, timeout = 60000 } = options;
 
     if (!appId || !appSecret) {
       console.error('Error: Missing App Credentials (appId and appSecret are required for login)');
@@ -50,6 +51,7 @@ export class LoginHandler {
       const authHandler = new LarkAuthHandlerLocal(app, {
         port: parseInt(port),
         host,
+        callbackHost,
         domain,
         appId,
         appSecret,
