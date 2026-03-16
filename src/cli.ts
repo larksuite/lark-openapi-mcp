@@ -30,6 +30,7 @@ program
   .option('-s, --app-secret <appSecret>', 'Feishu/Lark App Secret')
   .option('-d, --domain <domain>', '(Optional) Feishu/Lark Domain (default: "https://open.feishu.cn")')
   .option('--host <host>', '(Optional) Host to listen (default: "localhost")')
+  .option('--callback-host <callbackHost>', '(Optional) Callback host for OAuth (default: "localhost")')
   .option('-p, --port <port>', '(Optional) Port to listen (default: "3000")')
   .option(
     '--scope <scope>',
@@ -40,7 +41,7 @@ program
     if (NODE_VERSION_MAJOR < 20) {
       logger.error(
         `❌ This CLI requires Node.js >= 20. You are using v${process.versions.node}.\n\n` +
-          `👉 Please upgrade Node.js: https://nodejs.org/`,
+        `👉 Please upgrade Node.js: https://nodejs.org/`,
       );
       process.exit(1);
     }
@@ -112,7 +113,7 @@ program
     if (NODE_VERSION_MAJOR < 20 && mergedOptions.oauth) {
       logger.error(
         `❌ This CLI requires Node.js >= 20. You are using v${process.versions.node}.\n\n` +
-          `👉 Please upgrade Node.js: https://nodejs.org/`,
+        `👉 Please upgrade Node.js: https://nodejs.org/`,
       );
       process.exit(1);
     }

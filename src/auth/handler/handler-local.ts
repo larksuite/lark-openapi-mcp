@@ -16,14 +16,17 @@ export class LarkAuthHandlerLocal extends LarkAuthHandler {
     if (this.expressServer) {
       return;
     }
+    const bindHost = (this.options.callbackHost && this.options.callbackHost !== 'localhost')
+      ? '0.0.0.0'
+      : this.options.host;
 
     return new Promise((resolve, reject) => {
-      logger.info(`[LarkAuthHandlerLocal] Starting server on ${this.options.host}:${this.options.port}`);
-      this.expressServer = this.app.listen(this.options.port, this.options.host, (error) => {
+      logger.info(`[LarkAuthHandlerLocal] Starting server on ${bindHost}:${this.options.port}`);
+      this.expressServer = this.app.listen(this.options.port, bindHost, (error) => {
         if (error) {
           reject(error);
         }
-        logger.info(`[LarkAuthHandlerLocal] Server started on ${this.options.host}:${this.options.port}`);
+        logger.info(`[LarkAuthHandlerLocal] Server started on ${bindHost}:${this.options.port}`);
         resolve(true);
       });
     });
@@ -118,7 +121,7 @@ export class LarkAuthHandlerLocal extends LarkAuthHandler {
       const { codeVerifier, codeChallenge } = generatePKCEPair();
       authStore.storeCodeVerifier(LarkAuthHandlerLocal.LOCAL_CLIENT_ID, codeVerifier);
 
-      const authorizeUrl = new URL(`http://${this.options.host}:${this.options.port}/authorize`);
+      const authorizeUrl = new URL(`${this.issuerUrl}/authorize`);
       authorizeUrl.searchParams.set('client_id', LarkAuthHandlerLocal.LOCAL_CLIENT_ID);
       authorizeUrl.searchParams.set('response_type', 'code');
       authorizeUrl.searchParams.set('code_challenge', codeChallenge);
