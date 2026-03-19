@@ -293,6 +293,11 @@
 ## Business domain: boardV1
 | MCP Tool Name | API | Description | 
 | --- | --- | --- |
+| board.v1.whiteboard.downloadAsImage | [Download board as image](https://open.feishu.cn/api-explorer?from=op_doc_tab&apiName=download_as_image&project=board&resource=whiteboard&version=v1) | Download board as image |
+| board.v1.whiteboard.theme | [Get board theme](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/theme) | Get board theme |
+| board.v1.whiteboard.updateTheme | [Update Theme](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/update_theme) | Update Theme |
+| board.v1.whiteboardNode.createPlantuml | [whiteboard syntactic parse](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard-node/create_plantuml) | Import PlantUML or Mermaid diagrams into the board |
+| board.v1.whiteboardNode.create | [Create node](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard-node/create) | Create board nodes |
 | board.v1.whiteboardNode.list | [list nodes](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard-node/list) | Obtain all nodes of a board |
 
 ## Business domain: calendarV4
@@ -1513,4 +1518,3 @@
 | workplace.v1.customWorkplaceAccessData.search | [Get Custom Workplace Access Data](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/workplace-v1/custom_workplace_access_data/search) | Get Custom Workplace Access Data |
 | workplace.v1.workplaceAccessData.search | [search workplace access data](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/workplace-v1/workplace_access_data/search) | Get Workplace Access Data, including default workplace and custom workplace |
 | workplace.v1.workplaceBlockAccessData.search | [Get Block  Access Data](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/workplace-v1/workplace_block_access_data/search) | Workplace-workplace access data-Get Block Access Data-Get Custom Workplace Block Access Data |
-

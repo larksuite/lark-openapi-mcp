@@ -293,6 +293,11 @@
 ## 业务域: boardV1
 | MCP 工具名称 | API | 描述 | 
 | --- | --- | --- |
+| board.v1.whiteboard.downloadAsImage | [下载画板为图片](https://open.feishu.cn/api-explorer?from=op_doc_tab&apiName=download_as_image&project=board&resource=whiteboard&version=v1) | 下载画板为图片 |
+| board.v1.whiteboard.theme | [获取画板主题](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/theme) | 获取画板主题 |
+| board.v1.whiteboard.updateTheme | [更新画板主题](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard/update_theme) | 更新画板主题 |
+| board.v1.whiteboardNode.createPlantuml | [解析画板语法](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard-node/create_plantuml) | 用户可以将 PlantUML 或 Mermaid 图表导入画板进行协同编辑 |
+| board.v1.whiteboardNode.create | [创建节点](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard-node/create) | 创建画板节点 |
 | board.v1.whiteboardNode.list | [获取所有节点](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/board-v1/whiteboard-node/list) | 获取画板内所有的节点 |
 
 ## 业务域: calendarV4
@@ -1530,4 +1535,3 @@
 | workplace.v1.customWorkplaceAccessData.search | [获取定制工作台访问数据](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/workplace-v1/custom_workplace_access_data/search) | 获取定制工作台访问数据 |
 | workplace.v1.workplaceAccessData.search | [获取工作台访问数据](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/workplace-v1/workplace_access_data/search) | 获取工作台访问数据（包含默认工作台与定制工作台） |
 | workplace.v1.workplaceBlockAccessData.search | [获取定制工作台小组件访问数据](https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/workplace-v1/workplace_block_access_data/search) | 获取定制工作台小组件访问数据 |
-
