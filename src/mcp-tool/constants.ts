@@ -47,9 +47,14 @@ export const presetLightToolNames: ToolName[] = [
   'docx.v1.document.rawContent',
   'docx.builtin.import',
   'docx.builtin.search',
+  'docx.builtin.markdownWrite',
+  'docx.builtin.markdownRead',
   'wiki.v2.space.getNode',
   'bitable.v1.appTableRecord.search',
   'bitable.v1.appTableRecord.batchCreate',
+  'bitable.builtin.smartQuery',
+  'drive.builtin.upload',
+  'drive.builtin.download',
 ];
 
 export const presetContactToolNames: ToolName[] = ['contact.v3.user.batchGetId'];
@@ -86,7 +91,11 @@ export const presetDocToolNames: ToolName[] = [
   'docx.v1.document.rawContent',
   'docx.builtin.import',
   'docx.builtin.search',
+  'docx.builtin.markdownWrite',
+  'docx.builtin.markdownRead',
   'drive.v1.permissionMember.create',
+  'drive.builtin.upload',
+  'drive.builtin.download',
   'wiki.v2.space.getNode',
   'wiki.v1.node.search',
 ];
