@@ -37,6 +37,13 @@
     "ai"
   ],
   "homepage": "https://github.com/larksuite/lark-openapi-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/larksuite/lark-openapi-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/larksuite/lark-openapi-mcp/issues"
+  },
   "engines": {
     "node": ">=20.0.0"
   },
