@@ -1,6 +1,13 @@
 {
   "name": "@larksuiteoapi/lark-mcp",
   "version": "0.5.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/larksuite/lark-openapi-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/larksuite/lark-openapi-mcp/issues"
+  },
   "description": "Feishu/Lark OpenAPI MCP",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
