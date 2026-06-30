@@ -112,6 +112,52 @@ Task management focused preset for creating, modifying, and managing tasks with 
 ### preset.calendar.default
 Calendar management preset for creating, modifying events, and querying availability.
 
+## Write & Delete Presets
+
+These presets grant **mutating** access (edit/delete) on top of the read-oriented presets above. Combine them with their read counterparts, e.g. `-t preset.doc.default,preset.doc.write`. They require the matching write/delete permissions to be enabled on the Lark app in the developer console — the OAuth scope alone is not sufficient.
+
+| Tool Name | Function Description | preset.doc.write | preset.base.full | preset.drive.default | preset.sheets.default |
+| --- | --- | :---: | :---: | :---: | :---: |
+| docx.v1.document.create | Create a blank document | ✓ | | | |
+| docx.v1.documentBlock.patch | Update a document block | ✓ | | | |
+| docx.v1.documentBlock.batchUpdate | Batch update document blocks | ✓ | | | |
+| docx.v1.documentBlockChildren.create | Append child blocks to a document | ✓ | | | |
+| docx.v1.documentBlockChildren.batchDelete | Delete blocks from a document | ✓ | | | |
+| docx.v1.documentBlockDescendant.create | Create nested descendant blocks | ✓ | | | |
+| wiki.v2.spaceNode.create | Create a wiki node | ✓ | | | |
+| wiki.v2.spaceNode.updateTitle | Rename a wiki node | ✓ | | | |
+| wiki.v2.spaceNode.move | Move a wiki node | ✓ | | | |
+| wiki.v2.spaceNode.moveDocsToWiki | Move a doc into the wiki | ✓ | | | |
+| bitable.v1.app.create | Create base | | ✓ | | |
+| bitable.v1.app.update | Update base metadata | | ✓ | | |
+| bitable.v1.appTable.create / list | Create / list tables | | ✓ | | |
+| bitable.v1.appTable.patch | Rename a table | | ✓ | | |
+| bitable.v1.appTable.delete / batchDelete | Delete table(s) | | ✓ | | |
+| bitable.v1.appTableField.list / create / update / delete | Manage table fields | | ✓ | | |
+| bitable.v1.appTableRecord.search / create / update | Manage records | | ✓ | | |
+| bitable.v1.appTableRecord.delete | Delete a record | | ✓ | | |
+| bitable.v1.appTableRecord.batchCreate / batchUpdate / batchDelete | Batch manage records | | ✓ | | |
+| drive.v1.file.delete | Delete a file (doc / sheet / base / any file) | | | ✓ | |
+| drive.v1.file.move | Move a file | | | ✓ | |
+| drive.v1.file.createFolder | Create a folder | | | ✓ | |
+| drive.v1.permissionMember.create / update / delete | Manage sharing permissions | | | ✓ | |
+| sheets.v3.spreadsheet.create | Create a spreadsheet | | | | ✓ |
+| sheets.v3.spreadsheet.get / patch | Read / rename a spreadsheet | | | | ✓ |
+| sheets.v3.spreadsheetSheet.get / query | Read sheet metadata | | | | ✓ |
+| sheets.v3.spreadsheetSheet.find / replace | Find / replace in a sheet | | | | ✓ |
+
+### preset.doc.write
+Document and wiki **write** access: create documents, edit/append/delete document blocks, and create/rename/move wiki nodes. Lark documents are block-based, so editing content means patching blocks — there is no single "update document" call. There is no generated tool for deleting a wiki node.
+
+### preset.base.full
+Full Base (Bitable) control: everything in `preset.base.default` plus update and delete across apps, tables, fields, and records — including batch create/update/delete.
+
+### preset.drive.default
+Drive file management: delete and move files and folders, and manage sharing permissions. `drive.v1.file.delete` is the single endpoint that deletes a doc, sheet, Base, or any other file (pass the file token and its type).
+
+### preset.sheets.default
+Spreadsheet tools: read, create, rename, and find/replace within sheets. Bulk cell-value writing is a Sheets v2 API that is not in the generated tool set yet.
+
 ## Related Documentation
 
 - [Main Documentation](../../../README.md)

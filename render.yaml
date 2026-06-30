@@ -51,9 +51,19 @@ services:
         value: https://open.larksuite.com
       # Which tools to expose. Presets (preset.doc.default), whole projects (sheets, mail,
       # calendar, im), or specific tool names — comma/space separated. Edit anytime.
+      #   read presets:  preset.doc.default (doc/wiki read + import + share), calendar, im, mail
+      #   WRITE presets: preset.doc.write   (edit/append/delete doc blocks; create/rename/move wiki nodes)
+      #                  preset.base.full   (full Base CRUD incl. delete: apps/tables/fields/records, batch)
+      #                  preset.drive.default (delete/move files & folders — also deletes docs/sheets/bases
+      #                                        via drive.v1.file.delete — and manage sharing permissions)
+      #                  preset.sheets.default (read, create, rename, find/replace in spreadsheets)
+      # NOTE: wiki-node DELETE and bulk spreadsheet cell-value writes have no generated tool yet.
       - key: LARK_TOOLS
-        value: preset.doc.default,preset.base.default,calendar,im,sheets,mail
+        value: preset.doc.default,preset.doc.write,preset.base.full,preset.drive.default,preset.sheets.default,calendar,im,mail
       # OAuth scopes granted to the user_access_token. Must cover the tools above. Comma/space
-      # separated. Defaults to all app-granted permissions if left unset.
+      # separated. Defaults to all app-granted permissions if left unset. The broad resource
+      # scopes below (docx:document, bitable:app, drive:drive, wiki:wiki, sheets:spreadsheet)
+      # already grant write+delete — but the Lark app itself must have those write/delete
+      # permissions enabled in the developer console, or the calls 403 regardless of scope.
       - key: LARK_OAUTH_SCOPE
         value: docx:document,wiki:wiki,bitable:app,drive:drive,calendar:calendar,im:message,im:chat,sheets:spreadsheet,offline_access
