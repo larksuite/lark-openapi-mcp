@@ -179,8 +179,12 @@ export class LarkOIDC2OAuthServerProvider implements OAuthServerProvider {
       throw new Error('refresh token is invalid');
     }
 
-    const appId = (originalToken.extra?.app_id as string) || this._options.appId;
-    const appSecret = (originalToken.extra?.app_secret as string) || this._options.appSecret;
+    const appId =
+      (originalToken.extra?.appId as string) || (originalToken.extra?.app_id as string) || this._options.appId;
+    const appSecret =
+      (originalToken.extra?.appSecret as string) ||
+      (originalToken.extra?.app_secret as string) ||
+      this._options.appSecret;
 
     try {
       logger.info(`[LarkOIDC2OAuthServerProvider] Refreshing token for client ${client.client_id}`);
@@ -199,7 +203,7 @@ export class LarkOIDC2OAuthServerProvider implements OAuthServerProvider {
       );
 
       const data = response.data;
-      
+
       const parseResult = LarkOIDCTokenSchema.safeParse(data);
       if (!parseResult.success) {
         throw new Error(`Token parse failed: invalid response: ${data?.code}, ${data?.msg}`);

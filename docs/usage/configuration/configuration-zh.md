@@ -178,6 +178,27 @@ npx -y @larksuiteoapi/lark-mcp mcp \
 
 > 💡 **提示**：streamable 服务器启动后会持续运行，建议使用进程管理器（如 PM2）来确保服务稳定性。
 
+### 复用 `login` 保存的单用户身份
+
+如果所有客户端都应以同一个预登录用户身份调用 API，可先执行 `lark-mcp login`，再使用以下命令启动服务：
+
+```bash
+npx -y @larksuiteoapi/lark-mcp login -a cli_xxxx -s your_secret
+
+npx -y @larksuiteoapi/lark-mcp mcp \
+  -a cli_xxxx \
+  -s your_secret \
+  -m streamable \
+  --credential-source login \
+  --token-mode user_access_token \
+  --host 127.0.0.1 \
+  -p 3000
+```
+
+服务会动态读取本地登录令牌，并在 access token 过期时使用保存的 refresh token 自动续期。该模式不能与 `--oauth` 或 `--user-access-token` 同时使用。若监听非回环地址，请在反向代理或网络层增加访问控制，因为所有调用都会共享该用户身份。
+
+自动续期要求应用已开通 `offline_access` 用户权限。未指定 `--scope` 时，该权限会和应用已开通的其他用户权限一起继承；修改应用权限后需要重新执行 `login`。
+
 ### 启用 OAuth 用户身份认证
 
 当需要在服务化部署中使用用户身份调用 API 时，可以启用 OAuth 认证功能。
@@ -322,6 +343,7 @@ export LARK_TOKEN_MODE=auto
 | `host` | string | 监听主机 | `localhost` |
 | `port` | string/number | 监听端口 | `3000` |
 | `oauth` | boolean | 启用OAuth | `false` |
+| `credentialSource` | string | Streamable 模式下复用本地登录凭据，可选值为 login | - |
 | `scope` | string | OAuth权限范围 | `""` |
 
 ### 配置优先级

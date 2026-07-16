@@ -272,6 +272,64 @@ describe('LarkMcpTool', () => {
       expect(mockAuth.refreshToken).toHaveBeenCalledWith('old-token');
     });
 
+    it('应该合并同一应用的并发刷新并等待新token持久化', async () => {
+      const expiredToken = {
+        valid: false,
+        isExpired: true,
+        token: { token: 'old-token', extra: { refreshToken: 'refresh-token' } },
+      };
+      (isTokenValid as jest.Mock).mockResolvedValue(expiredToken);
+
+      let finishRefresh!: (value: any) => void;
+      mockAuth.refreshToken.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            finishRefresh = resolve;
+          }),
+      );
+
+      let finishPersistence!: () => void;
+      const persistToken = jest.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            finishPersistence = resolve;
+          }),
+      );
+      const tokenBinding = {
+        getter: jest.fn().mockResolvedValue('old-token'),
+        setter: persistToken,
+      };
+      const firstTool = new LarkMcpTool({ client: mockClient, appId: 'test-app-id', oauth: true }, mockAuth);
+      const secondTool = new LarkMcpTool({ client: mockClient, appId: 'test-app-id', oauth: true }, mockAuth);
+      firstTool.updateUserAccessToken(tokenBinding);
+      secondTool.updateUserAccessToken(tokenBinding);
+
+      const firstResult = firstTool.ensureGetUserAccessToken();
+      const secondResult = secondTool.ensureGetUserAccessToken();
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(mockAuth.refreshToken).toHaveBeenCalledTimes(1);
+
+      finishRefresh({ access_token: 'new-token', refresh_token: 'new-refresh-token' });
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(persistToken).toHaveBeenCalledWith('new-token');
+
+      let completed = false;
+      void Promise.all([firstResult, secondResult]).then(() => {
+        completed = true;
+      });
+      await Promise.resolve();
+      expect(completed).toBe(false);
+
+      finishPersistence();
+      await expect(Promise.all([firstResult, secondResult])).resolves.toEqual([
+        { userAccessToken: 'new-token' },
+        { userAccessToken: 'new-token' },
+      ]);
+      expect(persistToken).toHaveBeenCalledTimes(1);
+    });
+
     it('应该处理重新授权场景', async () => {
       // 令牌无效，需要重新授权
       (isTokenValid as jest.Mock).mockResolvedValueOnce({
@@ -385,6 +443,19 @@ describe('LarkMcpTool', () => {
       // 测试没有authorize URL
       const result3 = tool.getReAuthorizeMessage(undefined, 99991661, 'Invalid token');
       expect(result3.isError).toBe(true);
+    });
+
+    it('login凭据失效时应该提示重新执行login命令', () => {
+      const tool = new LarkMcpTool({
+        client: mockClient,
+        appId: 'test-app-id',
+        credentialSource: 'login',
+      });
+
+      const result = tool.getReAuthorizeMessage();
+      expect(JSON.parse(result.content[0].text).instruction).toBe(
+        'Run lark-mcp login -a test-app-id again, then retry the request.',
+      );
     });
 
     it('应该处理工具执行中的用户访问令牌错误和重新授权', async () => {

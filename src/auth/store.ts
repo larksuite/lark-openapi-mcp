@@ -171,6 +171,24 @@ export class AuthStore implements OAuthRegisteredClientsStore {
     return accessToken;
   }
 
+  async rotateLocalAccessToken(accessToken: string, appId: string): Promise<string> {
+    await this.initialize();
+
+    if (!this.storageDataCache.localTokens) {
+      this.storageDataCache.localTokens = {};
+    }
+
+    const previousAccessToken = this.storageDataCache.localTokens[appId];
+    this.storageDataCache.localTokens[appId] = accessToken;
+
+    if (previousAccessToken && previousAccessToken !== accessToken) {
+      delete this.storageDataCache.tokens[previousAccessToken];
+    }
+
+    await this.saveToStorage();
+    return accessToken;
+  }
+
   async removeLocalAccessToken(appId: string): Promise<void> {
     await this.initialize();
     if (this.storageDataCache.localTokens?.[appId]) {

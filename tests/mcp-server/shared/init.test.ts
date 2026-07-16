@@ -279,6 +279,53 @@ describe('initMcpServerWithTransport', () => {
     );
   });
 
+  it('应该只允许streamable模式使用login凭据来源', async () => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      host: 'localhost',
+      port: 3000,
+      mode: 'stdio' as const,
+      credentialSource: 'login' as const,
+    };
+
+    await expect(initMcpServerWithTransport('oapi', options)).rejects.toThrow(
+      'credentialSource login is only supported in streamable mode',
+    );
+  });
+
+  it.each([
+    ['userAccessToken', { userAccessToken: 'test-token' }],
+    ['oauth', { oauth: true }],
+  ])('应该拒绝login凭据来源与%s组合使用', async (_name, conflictingOption) => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      host: 'localhost',
+      port: 3000,
+      mode: 'streamable' as const,
+      credentialSource: 'login' as const,
+      ...conflictingOption,
+    };
+
+    await expect(initMcpServerWithTransport('oapi', options)).rejects.toThrow(
+      'credentialSource login cannot be used with userAccessToken or oauth',
+    );
+  });
+
+  it('应该拒绝无效的凭据来源', async () => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      host: 'localhost',
+      port: 3000,
+      mode: 'streamable' as const,
+      credentialSource: 'unknown' as any,
+    };
+
+    await expect(initMcpServerWithTransport('oapi', options)).rejects.toThrow('Invalid credentialSource:unknown');
+  });
+
   it('应该在无效的服务器类型时抛出错误', async () => {
     const options = {
       appId: 'test-app-id',

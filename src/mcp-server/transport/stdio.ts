@@ -1,9 +1,9 @@
 import express from 'express';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { InitTransportServerFunction } from '../shared';
-import { authStore } from '../../auth';
 import { LarkAuthHandlerLocal } from '../../auth';
 import { logger } from '../../utils/logger';
+import { createLocalUserAccessToken } from '../shared/local-user-access-token';
 
 export const initStdioServer: InitTransportServerFunction = async (
   getNewServer,
@@ -28,7 +28,7 @@ export const initStdioServer: InitTransportServerFunction = async (
   const userAccessTokenValue = userAccessToken
     ? userAccessToken
     : appId
-      ? { getter: async () => await authStore.getLocalAccessToken(appId) }
+      ? createLocalUserAccessToken(appId)
       : undefined;
 
   const mcpServer = getNewServer({ ...options, userAccessToken: userAccessTokenValue }, authHandler);

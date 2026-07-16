@@ -178,6 +178,27 @@ After the server starts, configure the connection URL in each MCP client:
 
 > 💡 **Tip**: The streamable server will continue running after startup. It's recommended to use a process manager (such as PM2) to ensure service stability.
 
+### Reuse a Single Identity Saved by `login`
+
+If every client should call APIs as the same pre-authenticated user, run `lark-mcp login` first and then start the service as follows:
+
+```bash
+npx -y @larksuiteoapi/lark-mcp login -a cli_xxxx -s your_secret
+
+npx -y @larksuiteoapi/lark-mcp mcp \
+  -a cli_xxxx \
+  -s your_secret \
+  -m streamable \
+  --credential-source login \
+  --token-mode user_access_token \
+  --host 127.0.0.1 \
+  -p 3000
+```
+
+The service reads the locally saved token dynamically and automatically renews an expired access token with the stored refresh token. This mode cannot be combined with `--oauth` or `--user-access-token`. If you listen on a non-loopback address, add access control at the reverse proxy or network layer because every request shares this user identity.
+
+Automatic renewal requires the app to have the `offline_access` user permission enabled. When `login` is run without `--scope`, this permission is inherited together with all other user permissions enabled for the app. Re-run `login` after changing app permissions.
+
 ### Enable OAuth User Identity Authentication
 
 When you need to use user identity for API calls in service deployment, you can enable OAuth authentication functionality.
@@ -322,6 +343,7 @@ For complex configurations, you can use JSON configuration files:
 | `host` | string | Listen host | `localhost` |
 | `port` | string/number | Listen port | `3000` |
 | `oauth` | boolean | Enable OAuth | `false` |
+| `credentialSource` | string | Reuse local login credentials in Streamable mode; supported value: login | - |
 | `scope` | string | OAuth permission scope | `""` |
 
 ### Configuration Priority

@@ -52,6 +52,8 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         authorizationUrl: 'https://open.feishu.cn/open-apis/authen/v1/authorize',
         tokenUrl: 'https://open.feishu.cn/open-apis/authen/v2/oauth/token',
         registrationUrl: 'https://open.feishu.cn/open-apis/authen/v1/index',
+        tenantAccessTokenUrl: 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal',
+        appScopesUrl: 'https://open.feishu.cn/open-apis/application/v6/scopes',
       });
     });
 
@@ -90,12 +92,15 @@ describe('LarkOAuth2OAuthServerProvider', () => {
       expect(url.searchParams.get('code_challenge_method')).toBe('S256');
       expect(url.searchParams.get('state')).toBe('test-state');
       expect(url.searchParams.get('scope')).toBe('scope1 scope2');
+      expect(mockedHttpInstance.post).not.toHaveBeenCalled();
+      expect(mockedHttpInstance.get).not.toHaveBeenCalled();
     });
 
     it('应该处理没有state的情况', async () => {
       const params = {
         codeChallenge: 'test-challenge',
         redirectUri: 'http://example.com/callback',
+        scopes: ['scope1'],
       };
 
       await provider.authorize(mockClient, params, mockResponse as Response);
@@ -106,7 +111,24 @@ describe('LarkOAuth2OAuthServerProvider', () => {
       expect(url.searchParams.get('state')).toBeNull();
     });
 
-    it('应该处理没有scopes的情况', async () => {
+    it('没有scopes时应该请求应用已授权的全部用户权限', async () => {
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: { tenant_access_token: 'test-tenant-access-token' },
+      });
+      mockedHttpInstance.get.mockResolvedValueOnce({
+        data: {
+          code: 0,
+          data: {
+            scopes: [
+              { grant_status: 1, scope_name: 'docx:document', scope_type: 'user' },
+              { grant_status: 1, scope_name: 'offline_access', scope_type: 'user' },
+              { grant_status: 1, scope_name: 'im:message:send_as_bot', scope_type: 'tenant' },
+              { grant_status: 0, scope_name: 'calendar:calendar', scope_type: 'user' },
+            ],
+          },
+        },
+      });
+
       const params = {
         codeChallenge: 'test-challenge',
         redirectUri: 'http://example.com/callback',
@@ -117,7 +139,39 @@ describe('LarkOAuth2OAuthServerProvider', () => {
       const redirectUrl = (mockResponse.redirect as jest.Mock).mock.calls[0][0];
       const url = new URL(redirectUrl);
 
-      expect(url.searchParams.get('scope')).toBeNull();
+      expect(mockedHttpInstance.post).toHaveBeenCalledWith(
+        'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal',
+        { app_id: 'test-app-id', app_secret: 'test-app-secret' },
+        { headers: { 'Content-Type': 'application/json; charset=utf-8' } },
+      );
+      expect(mockedHttpInstance.get).toHaveBeenCalledWith(
+        'https://open.feishu.cn/open-apis/application/v6/scopes',
+        { headers: { Authorization: 'Bearer test-tenant-access-token' } },
+      );
+      expect(url.searchParams.get('scope')).toBe('docx:document offline_access');
+    });
+
+    it('没有已授权用户权限时应该拒绝生成最小权限授权URL', async () => {
+      mockedHttpInstance.post.mockResolvedValueOnce({
+        data: { tenant_access_token: 'test-tenant-access-token' },
+      });
+      mockedHttpInstance.get.mockResolvedValueOnce({
+        data: {
+          code: 0,
+          data: {
+            scopes: [{ grant_status: 1, scope_name: 'im:message:send_as_bot', scope_type: 'tenant' }],
+          },
+        },
+      });
+
+      await expect(
+        provider.authorize(
+          mockClient,
+          { codeChallenge: 'test-challenge', redirectUri: 'http://example.com/callback' },
+          mockResponse as Response,
+        ),
+      ).rejects.toThrow('Failed to load default user scopes: no granted user scopes found for the app');
+      expect(mockResponse.redirect).not.toHaveBeenCalled();
     });
   });
 
@@ -275,8 +329,8 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         expiresAt: Date.now() / 1000 + 3600,
         extra: {
           refreshToken: 'test-refresh-token',
-          appId: 'test-app-id',
-          appSecret: 'test-app-secret',
+          appId: 'stored-app-id',
+          appSecret: 'stored-app-secret',
         },
       };
 
@@ -300,8 +354,8 @@ describe('LarkOAuth2OAuthServerProvider', () => {
         'https://open.feishu.cn/open-apis/authen/v2/oauth/token',
         {
           grant_type: 'refresh_token',
-          client_id: 'test-app-id',
-          client_secret: 'test-app-secret',
+          client_id: 'stored-app-id',
+          client_secret: 'stored-app-secret',
           refresh_token: 'test-refresh-token',
           scope: 'scope1 scope2',
         },

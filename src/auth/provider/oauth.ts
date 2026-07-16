@@ -13,6 +13,8 @@ interface OAuth2OAuthEndpoints {
   authorizationUrl: string;
   tokenUrl: string;
   registrationUrl: string;
+  tenantAccessTokenUrl: string;
+  appScopesUrl: string;
 }
 
 export class LarkOAuth2OAuthServerProvider implements OAuthServerProvider {
@@ -28,12 +30,52 @@ export class LarkOAuth2OAuthServerProvider implements OAuthServerProvider {
       authorizationUrl: `${domain}/open-apis/authen/v1/authorize`,
       tokenUrl: `${domain}/open-apis/authen/v2/oauth/token`,
       registrationUrl: `${domain}/open-apis/authen/v1/index`,
+      tenantAccessTokenUrl: `${domain}/open-apis/auth/v3/tenant_access_token/internal`,
+      appScopesUrl: `${domain}/open-apis/application/v6/scopes`,
     };
     this._options = options;
   }
 
   get clientsStore(): OAuthRegisteredClientsStore {
     return authStore;
+  }
+
+  private async getDefaultUserScopes(): Promise<string[]> {
+    try {
+      const tenantTokenResponse = await commonHttpInstance.post(
+        this._endpoints.tenantAccessTokenUrl,
+        { app_id: this._options.appId, app_secret: this._options.appSecret },
+        { headers: { 'Content-Type': 'application/json; charset=utf-8' } },
+      );
+      const tenantAccessToken = tenantTokenResponse.data?.tenant_access_token;
+      if (!tenantAccessToken) {
+        throw new Error(
+          `failed to get tenant access token: ${tenantTokenResponse.data?.code} ${tenantTokenResponse.data?.msg}`,
+        );
+      }
+
+      const scopeResponse = await commonHttpInstance.get(this._endpoints.appScopesUrl, {
+        headers: { Authorization: `Bearer ${tenantAccessToken}` },
+      });
+      if (scopeResponse.data?.code !== 0) {
+        throw new Error(`failed to get app scopes: ${scopeResponse.data?.code} ${scopeResponse.data?.msg}`);
+      }
+
+      const scopes = scopeResponse.data?.data?.scopes;
+      const userScopes = Array.isArray(scopes)
+        ? scopes
+            .filter((scope) => scope?.scope_type === 'user' && scope?.grant_status === 1 && scope?.scope_name)
+            .map((scope) => scope.scope_name as string)
+        : [];
+      const uniqueUserScopes = [...new Set(userScopes)];
+      if (!uniqueUserScopes.length) {
+        throw new Error('no granted user scopes found for the app');
+      }
+      return uniqueUserScopes;
+    } catch (error: any) {
+      logger.error(`[LarkOAuth2OAuthServerProvider] Failed to load default user scopes: ${error.message}`);
+      throw new Error(`Failed to load default user scopes: ${error.message}`);
+    }
   }
 
   async authorize(_client: OAuthClientInformationFull, params: AuthorizationParams, res: Response): Promise<void> {
@@ -49,9 +91,8 @@ export class LarkOAuth2OAuthServerProvider implements OAuthServerProvider {
     if (params.state) {
       searchParams.set('state', params.state);
     }
-    if (params.scopes?.length) {
-      searchParams.set('scope', params.scopes.join(' '));
-    }
+    const scopes = params.scopes?.length ? params.scopes : await this.getDefaultUserScopes();
+    searchParams.set('scope', scopes.join(' '));
     targetUrl.search = searchParams.toString();
     logger.info(
       `[LarkOAuth2OAuthServerProvider] Authorizing client ${_client.client_id} Redirecting to authorization URL: ${targetUrl.toString()}`,
@@ -137,8 +178,12 @@ export class LarkOAuth2OAuthServerProvider implements OAuthServerProvider {
       throw new Error('refresh token is invalid');
     }
 
-    const appId = (originalToken.extra?.app_id as string) || this._options.appId;
-    const appSecret = (originalToken.extra?.app_secret as string) || this._options.appSecret;
+    const appId =
+      (originalToken.extra?.appId as string) || (originalToken.extra?.app_id as string) || this._options.appId;
+    const appSecret =
+      (originalToken.extra?.appSecret as string) ||
+      (originalToken.extra?.app_secret as string) ||
+      this._options.appSecret;
 
     const params: Record<string, string> = {
       grant_type: 'refresh_token',

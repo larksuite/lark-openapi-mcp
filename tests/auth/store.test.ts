@@ -249,6 +249,32 @@ describe('AuthStore', () => {
       expect(await testAuthStore.getToken(accessToken)).toBeUndefined();
     });
 
+    it('should atomically rotate the app token mapping and remove the previous token', async () => {
+      const appId = 'test-app-id';
+      const oldToken: AuthInfo = {
+        token: 'old-access-token',
+        clientId: 'test-client',
+        scopes: ['read'],
+      };
+      const newToken: AuthInfo = {
+        token: 'new-access-token',
+        clientId: 'test-client',
+        scopes: ['read'],
+      };
+
+      await testAuthStore.storeToken(oldToken);
+      await testAuthStore.storeLocalAccessToken(oldToken.token, appId);
+      await testAuthStore.storeToken(newToken);
+      jest.clearAllMocks();
+
+      await testAuthStore.rotateLocalAccessToken(newToken.token, appId);
+
+      expect(await testAuthStore.getLocalAccessToken(appId)).toBe(newToken.token);
+      expect(await testAuthStore.getToken(oldToken.token)).toBeUndefined();
+      expect(await testAuthStore.getToken(newToken.token)).toEqual(newToken);
+      expect(mockStorageManager.saveStorageData).toHaveBeenCalledTimes(1);
+    });
+
     it('should handle edge cases gracefully', async () => {
       // Non-existent app
       expect(await testAuthStore.getLocalAccessToken('non-existent')).toBeUndefined();

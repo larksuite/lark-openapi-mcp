@@ -33,7 +33,7 @@ program
   .option('-p, --port <port>', '(Optional) Port to listen (default: "3000")')
   .option(
     '--scope <scope>',
-    '(Optional) Specify OAuth scope for user access token, default is all permissions granted to the app, separated by spaces or commas',
+    '(Optional) Specify OAuth scope for user access token, default is all user permissions enabled for the app, separated by spaces or commas',
   )
   .option('--debug', '(Optional) Enable debug mode')
   .action(async (options) => {
@@ -84,12 +84,16 @@ program
   )
   .option('-u, --user-access-token <userAccessToken>', '(Optional) User Access Token (beta)')
   .option(
+    '--credential-source <credentialSource>',
+    '(Optional) User credential source. Use "login" in streamable mode to reuse tokens saved by lark-mcp login',
+  )
+  .option(
     '--oauth',
     '(Optional) Enable MCP Auth Server to get user_access_token and auto request user login when token expires (Beta) (default: false)',
   )
   .option(
     '--scope <scope>',
-    '(Optional) Specify OAuth scope for user access token, default is all permissions granted to the app, separated by spaces or commas',
+    '(Optional) Specify OAuth scope for user access token, default is all user permissions enabled for the app, separated by spaces or commas',
   )
   .option('-m, --mode <mode>', '(Optional) Transport Mode, stdio or sse or streamable (default: "stdio")')
   .option('--host <host>', '(Optional) Host to listen (default: "localhost")')

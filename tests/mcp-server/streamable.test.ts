@@ -2,7 +2,7 @@ import express from 'express';
 import { initStreamableServer } from '../../src/mcp-server/transport/streamable';
 import { McpServerOptions } from '../../src/mcp-server/shared/types';
 import { parseMCPServerOptionsFromRequest, sendJsonRpcError } from '../../src/mcp-server/transport/utils';
-import { LarkAuthHandler } from '../../src/auth';
+import { authStore, LarkAuthHandler } from '../../src/auth';
 
 // 模拟依赖
 jest.mock('express', () => {
@@ -59,6 +59,10 @@ jest.mock('../../src/mcp-server/transport/utils', () => ({
 }));
 
 jest.mock('../../src/auth', () => ({
+  authStore: {
+    getLocalAccessToken: jest.fn().mockResolvedValue('mock-local-token'),
+    rotateLocalAccessToken: jest.fn().mockResolvedValue(undefined),
+  },
   LarkAuthHandler: jest.fn().mockImplementation(() => ({
     setupRoutes: jest.fn(),
     authenticateRequest: jest.fn((req, res, next) => next()),
@@ -230,6 +234,65 @@ describe('initStreamableServer', () => {
         port: 3000,
         userAccessToken: undefined,
       },
+      undefined,
+    );
+  });
+
+  it('应该在login凭据模式下复用并更新本地登录token', async () => {
+    const options: McpServerOptions = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      host: 'localhost',
+      port: 3000,
+      credentialSource: 'login',
+    };
+
+    const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
+    const getMockServer = jest.fn().mockReturnValue(new McpServer());
+
+    initStreamableServer(getMockServer, options, { needAuthFlow: true });
+
+    const mockReq = {
+      headers: {},
+      query: {},
+      body: { jsonrpc: '2.0', method: 'test' },
+    };
+    const mockRes = createMockResponse();
+
+    await postRouteHandler(mockReq, mockRes);
+
+    const [serverOptions, authHandler] = getMockServer.mock.calls[0];
+    expect(authHandler).toBeDefined();
+    expect(serverOptions.userAccessToken).toEqual({
+      getter: expect.any(Function),
+      setter: expect.any(Function),
+    });
+
+    expect(await serverOptions.userAccessToken.getter()).toBe('mock-local-token');
+    await serverOptions.userAccessToken.setter('new-local-token');
+
+    expect(authStore.getLocalAccessToken).toHaveBeenCalledWith('test-app-id');
+    expect(authStore.rotateLocalAccessToken).toHaveBeenCalledWith('new-local-token', 'test-app-id');
+  });
+
+  it('应该保留启动参数中显式指定的userAccessToken', async () => {
+    const options: McpServerOptions = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      host: 'localhost',
+      port: 3000,
+      userAccessToken: 'startup-token',
+    };
+
+    const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
+    const getMockServer = jest.fn().mockReturnValue(new McpServer());
+
+    initStreamableServer(getMockServer, options);
+
+    await postRouteHandler({ headers: {}, query: {}, body: { jsonrpc: '2.0', method: 'test' } }, createMockResponse());
+
+    expect(getMockServer).toHaveBeenCalledWith(
+      expect.objectContaining({ userAccessToken: 'startup-token' }),
       undefined,
     );
   });

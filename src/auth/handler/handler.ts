@@ -1,7 +1,7 @@
 import { Express, Request, Response, NextFunction } from 'express';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
-import { LarkOIDC2OAuthServerProvider, LarkOAuth2OAuthServerProvider } from '../provider';
+import { LarkOAuth2OAuthServerProvider } from '../provider';
 import { authStore } from '../store';
 import { generatePKCEPair } from '../utils/pkce';
 import { logger } from '../../utils/logger';
@@ -15,11 +15,12 @@ export interface LarkOAuthClientConfig {
   appSecret: string;
 
   scope?: string[];
+  credentialSource?: 'login';
 }
 
 export class LarkAuthHandler {
   protected readonly options: LarkOAuthClientConfig;
-  protected readonly provider: LarkOIDC2OAuthServerProvider | LarkOAuth2OAuthServerProvider;
+  protected readonly provider: LarkOAuth2OAuthServerProvider;
 
   get callbackUrl() {
     return `http://${this.options.host}:${this.options.port}/callback`;
@@ -50,11 +51,7 @@ export class LarkAuthHandler {
       callbackUrl: this.callbackUrl,
     };
 
-    if (!this.options.scope?.length) {
-      this.provider = new LarkOIDC2OAuthServerProvider(params);
-    } else {
-      this.provider = new LarkOAuth2OAuthServerProvider(params);
-    }
+    this.provider = new LarkOAuth2OAuthServerProvider(params);
   }
 
   protected async callback(req: Request, res: Response) {
@@ -121,7 +118,9 @@ export class LarkAuthHandler {
 
     logger.info(`[LarkAuthHandler] refreshToken: Successfully refreshed token`);
 
-    await authStore.removeToken(accessToken);
+    if (this.options.credentialSource !== 'login') {
+      await authStore.removeToken(accessToken);
+    }
     return newToken;
   }
 

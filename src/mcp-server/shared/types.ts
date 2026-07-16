@@ -5,6 +5,7 @@ import { LarkAuthHandler } from '../../auth';
 
 export type McpServerType = 'oapi' | 'recall';
 export type McpServerTransport = 'stdio' | 'sse' | 'streamable';
+export type CredentialSource = 'login';
 
 export const mcpServerOptionSchema = z.object({
   tools: z.union([z.string(), z.array(z.string())]).optional(),
@@ -23,6 +24,7 @@ export interface McpServerOptions {
   tokenMode?: larkmcp.TokenMode;
   userAccessToken?: string | larkmcp.SettableValue;
   oauth?: boolean;
+  credentialSource?: CredentialSource;
   scope?: string[];
 
   mode?: McpServerTransport;

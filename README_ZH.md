@@ -109,6 +109,23 @@ npx -y @larksuiteoapi/lark-mcp login -a cli_xxxx -s yyyyy
 
 说明：在启用 `--oauth` 时，建议显式设置 `--token-mode` 为 `user_access_token`，表示以用户访问令牌调用 API，适用于访问用户资源或需要用户授权的场景（如读取个人文档、发送 IM 消息）。若保留默认 `auto`，可能在AI推理使用 `tenant_access_token`，导致权限不足或无法访问用户私有数据。
 
+如果要以单一登录用户身份启动 Streamable HTTP 服务，可显式复用 `login` 保存的令牌。服务会在令牌过期时使用本地保存的 refresh token 自动续期：
+
+```bash
+npx -y @larksuiteoapi/lark-mcp mcp \
+  -a cli_xxxx \
+  -s yyyyy \
+  -m streamable \
+  --credential-source login \
+  --token-mode user_access_token \
+  --host 127.0.0.1 \
+  -p 3000
+```
+
+`--credential-source login` 不能与 `--oauth` 或 `--user-access-token` 同时使用。该模式下所有客户端共享同一用户身份；如需多用户分别授权，请使用 `--oauth`。
+
+自动续期要求应用已开通 `offline_access` 用户权限。未指定 `--scope` 时，该权限会和应用已开通的其他用户权限一起继承；修改应用权限后需要重新执行 `login`。
+
 ### 域名配置
 
 根据您的使用场景，lark-mcp 支持配置不同的域名环境：
