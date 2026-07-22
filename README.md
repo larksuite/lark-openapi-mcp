@@ -83,7 +83,7 @@ If you need to access APIs with **user identity**, you need to login first using
 # Login and get user access token
 npx -y @larksuiteoapi/lark-mcp login -a cli_xxxx -s yyyyy
    
-# Or optionally, login with specific OAuth scope - if not specified, all permissions will be authorized by default
+# Or optionally, login with specific OAuth scope - if not specified, all user permissions enabled for the app will be authorized by default
 npx -y @larksuiteoapi/lark-mcp login -a cli_xxxx -s yyyyy --scope offline_access docx:document
 
 ```
@@ -112,6 +112,23 @@ Then add the following to your configuration file:
 ```
 
 Note: When enabling `--oauth`, it's recommended to explicitly set `--token-mode` to `user_access_token`, which means calling APIs with user access tokens, suitable for accessing user resources or scenarios requiring user authorization (such as reading personal documents, sending IM messages). If you keep the default `auto`, some APIs AI may fallback to `tenant_access_token`, which could result in insufficient permissions or inability to access user private data.
+
+To run a Streamable HTTP service as one pre-authenticated user, explicitly reuse the tokens saved by `login`. When the access token expires, the service automatically renews it with the stored refresh token:
+
+```bash
+npx -y @larksuiteoapi/lark-mcp mcp \
+  -a cli_xxxx \
+  -s yyyyy \
+  -m streamable \
+  --credential-source login \
+  --token-mode user_access_token \
+  --host 127.0.0.1 \
+  -p 3000
+```
+
+`--credential-source login` cannot be combined with `--oauth` or `--user-access-token`. All clients share the same user identity in this mode; use `--oauth` when each client must authorize independently.
+
+Automatic renewal requires the app to have the `offline_access` user permission enabled. When `login` is run without `--scope`, this permission is inherited together with all other user permissions enabled for the app. Re-run `login` after changing app permissions.
 
 ### Domain Configuration
 

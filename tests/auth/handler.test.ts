@@ -1,6 +1,6 @@
 import { Express, Request, Response, NextFunction } from 'express';
 import { LarkAuthHandler, LarkOAuthClientConfig } from '../../src/auth/handler/handler';
-import { LarkOAuth2OAuthServerProvider } from '../../src/auth/provider';
+import { LarkOIDC2OAuthServerProvider, LarkOAuth2OAuthServerProvider } from '../../src/auth/provider';
 import { authStore } from '../../src/auth/store';
 import { generatePKCEPair } from '../../src/auth/utils/pkce';
 
@@ -70,6 +70,39 @@ describe('LarkAuthHandler', () => {
       const handler = new LarkAuthHandler(mockApp, options);
 
       expect(handler).toBeInstanceOf(LarkAuthHandler);
+    });
+
+    it('未指定scope时应该使用OAuth2以继承应用已开通的用户权限', () => {
+      const options: Partial<LarkOAuthClientConfig> = {
+        port: 3000,
+        host: 'localhost',
+        domain: 'test.domain.com',
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+      };
+
+      new LarkAuthHandler(mockApp, options);
+
+      expect(LarkOAuth2OAuthServerProvider).toHaveBeenCalledWith(
+        expect.objectContaining({ appId: 'test-app-id', appSecret: 'test-app-secret' }),
+      );
+      expect(LarkOIDC2OAuthServerProvider).not.toHaveBeenCalled();
+    });
+
+    it('指定scope时应该继续使用OAuth2', () => {
+      const options: Partial<LarkOAuthClientConfig> = {
+        port: 3000,
+        host: 'localhost',
+        domain: 'test.domain.com',
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+        scope: ['docx:document'],
+      };
+
+      new LarkAuthHandler(mockApp, options);
+
+      expect(LarkOAuth2OAuthServerProvider).toHaveBeenCalled();
+      expect(LarkOIDC2OAuthServerProvider).not.toHaveBeenCalled();
     });
 
     it('应该在缺少必需参数时抛出错误', () => {
@@ -272,6 +305,28 @@ describe('LarkAuthHandler', () => {
       );
       expect(mockauthStore.removeToken).toHaveBeenCalledWith(accessToken);
       expect(result).toBe(mockNewToken);
+    });
+
+    it('login凭据来源应该延迟删除旧token直到本地映射完成轮换', async () => {
+      const handler = new LarkAuthHandler(mockApp, {
+        port: 3000,
+        host: 'localhost',
+        domain: 'test.domain.com',
+        appId: 'test-app-id',
+        appSecret: 'test-app-secret',
+        credentialSource: 'login',
+      });
+      (handler as any).provider = mockProvider;
+      mockauthStore.getToken.mockResolvedValue({
+        clientId: 'test-client-id',
+        scopes: ['scope1'],
+        extra: { refreshToken: 'test-refresh-token' },
+      });
+      mockProvider.exchangeRefreshToken.mockResolvedValue({ access_token: 'new-access-token' });
+
+      await handler.refreshToken('old-access-token');
+
+      expect(mockauthStore.removeToken).not.toHaveBeenCalled();
     });
 
     it('应该在没有找到本地token时抛出错误', async () => {

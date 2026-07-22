@@ -21,7 +21,7 @@
 | `--domain` | `-d` | 飞书/Lark API域名，默认为https://open.feishu.cn | `-d https://open.larksuite.com` |
 | `--host` |  | 监听主机，默认为localhost | `--host localhost` |
 | `--port` | `-p` | 监听端口，默认为3000 | `-p 3000` |
-| `--scope` |  | 指定授权用户访问令牌的OAuth权限范围，默认为应用开通的全部权限，用空格或者逗号分割 | `--scope offline_access docx:document` |
+| `--scope` |  | 指定用户访问令牌的 OAuth 权限范围，默认为应用已开通且支持用户身份的全部权限，用空格或者逗号分割 | `--scope offline_access docx:document` |
 
 ### 使用示例
 
@@ -75,15 +75,18 @@ npx -y @larksuiteoapi/lark-mcp logout
 | `--tool-name-case` | `-c` | 工具注册名称的命名格式，可选值为snake、camel、dot或kebab，默认为snake | `-c camel` |
 | `--language` | `-l` | 工具语言，可选值为zh或en，默认为en | `-l zh` |
 | `--user-access-token` | `-u` | 用户访问令牌，用于以用户身份调用API | `-u u-xxxx` |
+| `--credential-source` |  | 用户凭据来源；Streamable 模式可设为 login，以复用 `lark-mcp login` 保存的令牌 | `--credential-source login` |
 | `--token-mode` |  | API令牌类型，可选值为auto、tenant_access_token或user_access_token，默认为auto | `--token-mode user_access_token` |
 | `--oauth` |  | 开启 MCP Auth Server 获取user_access_token，且当Token失效时自动要求用户重新登录(Beta) | `--oauth` |
-| `--scope` |  | 指定授权用户访问令牌的OAuth权限范围，默认为应用开通的全部权限，用空格或者逗号分割 | `--scope offline_access docx:document` |
+| `--scope` |  | 指定用户访问令牌的 OAuth 权限范围，默认为应用已开通且支持用户身份的全部权限，用空格或者逗号分割 | `--scope offline_access docx:document` |
 | `--mode` | `-m` | 传输模式，可选值为stdio、streamable或sse，默认为stdio | `-m streamable` |
 | `--host` |  | SSE\Streamable模式下的监听主机，默认为localhost | `--host 0.0.0.0` |
 | `--port` | `-p` | SSE\Streamable模式下的监听端口，默认为3000 | `-p 3000` |
 | `--config` |  | 配置文件路径，支持JSON格式 | `--config ./config.json` |
 | `--version` | `-V` | 显示版本号 | `-V` |
 | `--help` | `-h` | 显示帮助信息 | `-h` |
+
+`--credential-source login` 仅支持 Streamable 模式，并且不能与 `--oauth` 或 `--user-access-token` 同时使用。
 
 ## 相关文档
 

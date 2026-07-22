@@ -222,6 +222,7 @@ describe('MCP Server Types', () => {
         tokenMode: 'auto' as larkmcp.TokenMode,
         userAccessToken: 'test-token',
         oauth: true,
+        credentialSource: 'login',
         scope: ['test-scope'],
         mode: 'stdio',
         host: 'localhost',
@@ -232,6 +233,7 @@ describe('MCP Server Types', () => {
       expect(options.language).toBe('zh');
       expect(options.mode).toBe('stdio');
       expect(options.oauth).toBe(true);
+      expect(options.credentialSource).toBe('login');
     });
 
     it('应该支持不同的tools类型', () => {

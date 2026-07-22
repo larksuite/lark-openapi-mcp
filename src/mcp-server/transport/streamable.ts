@@ -4,13 +4,14 @@ import { InitTransportServerFunction } from '../shared';
 import { parseMCPServerOptionsFromRequest, sendJsonRpcError } from './utils';
 import { LarkAuthHandler } from '../../auth';
 import { logger } from '../../utils/logger';
+import { createLocalUserAccessToken } from '../shared/local-user-access-token';
 
 export const initStreamableServer: InitTransportServerFunction = (
   getNewServer,
   options,
   { needAuthFlow } = { needAuthFlow: false },
 ) => {
-  const { userAccessToken, oauth, port, host } = options;
+  const { userAccessToken, oauth, port, host, credentialSource, appId } = options;
 
   if (!port || !host) {
     throw new Error('[Lark MCP] Port and host are required');
@@ -28,6 +29,8 @@ export const initStreamableServer: InitTransportServerFunction = (
     }
   }
 
+  const localUserAccessToken = credentialSource === 'login' && appId ? createLocalUserAccessToken(appId) : undefined;
+
   const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     if (authHandler && oauth) {
       authHandler.authenticateRequest(req, res, next);
@@ -43,7 +46,8 @@ export const initStreamableServer: InitTransportServerFunction = (
   app.post('/mcp', authMiddleware, async (req: Request, res: Response) => {
     const token = req.auth?.token;
     const { data } = parseMCPServerOptionsFromRequest(req);
-    const server = getNewServer({ ...options, ...data, userAccessToken: data.userAccessToken || token }, authHandler);
+    const resolvedUserAccessToken = localUserAccessToken || userAccessToken || data.userAccessToken || token;
+    const server = getNewServer({ ...options, ...data, userAccessToken: resolvedUserAccessToken }, authHandler);
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     res.on('close', () => {
       transport.close();

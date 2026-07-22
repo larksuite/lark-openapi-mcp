@@ -13,6 +13,8 @@ import { logger } from '../utils/logger';
  * Feishu/Lark MCP
  */
 export class LarkMcpTool {
+  private static readonly refreshPromises = new Map<string, Promise<string | undefined>>();
+
   // Lark Client
   private client: Client | null = null;
 
@@ -89,6 +91,34 @@ export class LarkMcpTool {
     }
   }
 
+  private async refreshUserAccessToken(accessToken: string): Promise<string | undefined> {
+    if (!this.auth) {
+      return undefined;
+    }
+
+    const refreshKey = `${this.options.appId || 'unknown-app'}:${accessToken}`;
+    const pendingRefresh = LarkMcpTool.refreshPromises.get(refreshKey);
+    if (pendingRefresh) {
+      return await pendingRefresh;
+    }
+
+    const refreshPromise = (async () => {
+      const newToken = await this.auth!.refreshToken(accessToken);
+      if (!newToken?.access_token) {
+        return undefined;
+      }
+      await this.setUserAccessToken(newToken.access_token);
+      return newToken.access_token;
+    })();
+
+    LarkMcpTool.refreshPromises.set(refreshKey, refreshPromise);
+    try {
+      return await refreshPromise;
+    } finally {
+      LarkMcpTool.refreshPromises.delete(refreshKey);
+    }
+  }
+
   async reAuthorize(): Promise<{ userAccessToken?: string; authorizeUrl?: string }> {
     const userAccessToken = await this.getUserAccessToken();
     // if not enable oauth mode, return empty object
@@ -99,7 +129,7 @@ export class LarkMcpTool {
     const { authorizeUrl, accessToken } = await this.auth.reAuthorize(userAccessToken);
     if (accessToken) {
       logger.info(`[LarkMcpTool] Successfully re-authorized user access token`);
-      this.setUserAccessToken(accessToken);
+      await this.setUserAccessToken(accessToken);
       return { userAccessToken: accessToken };
     }
     return { authorizeUrl };
@@ -121,10 +151,9 @@ export class LarkMcpTool {
     try {
       if (isExpired && token?.extra?.refreshToken) {
         logger.info(`[LarkMcpTool] UserAccessToken is expired, trying to use refreshToken to refresh...`);
-        const newToken = await this.auth.refreshToken(token.token);
-        if (newToken?.access_token) {
-          this.setUserAccessToken(newToken.access_token);
-          return { userAccessToken: newToken.access_token };
+        const newAccessToken = await this.refreshUserAccessToken(token.token);
+        if (newAccessToken) {
+          return { userAccessToken: newAccessToken };
         }
       }
     } catch (error) {
@@ -152,7 +181,9 @@ export class LarkMcpTool {
         ]
           .join('\n')
           .trim()
-      : '';
+      : this.options.credentialSource === 'login'
+        ? `Run lark-mcp login -a ${this.options.appId} again, then retry the request.`
+        : '';
 
     const reAuthorizeMessage = {
       errorCode,

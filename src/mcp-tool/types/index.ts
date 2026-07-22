@@ -72,6 +72,7 @@ export interface LarkMcpToolOptions extends LarkClientOptions {
   toolsOptions?: ToolsFilterOptions;
   tokenMode?: TokenMode;
   oauth?: boolean;
+  credentialSource?: 'login';
 }
 
 export interface SettableValue {

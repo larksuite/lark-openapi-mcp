@@ -44,6 +44,7 @@ export function initOAPIMcpServer(options: McpServerOptions, authHandler?: LarkA
       toolsOptions,
       tokenMode,
       oauth,
+      credentialSource: options.credentialSource,
     },
     authHandler,
   );
@@ -70,7 +71,26 @@ export function initRecallMcpServer(options: McpServerOptions) {
 }
 
 export async function initMcpServerWithTransport(serverType: McpServerType, options: McpServerOptions) {
-  const { mode, userAccessToken, oauth } = options;
+  const { mode, userAccessToken, oauth, credentialSource, appId } = options;
+
+  if (credentialSource && credentialSource !== 'login') {
+    throw new Error('Invalid credentialSource:' + credentialSource);
+  }
+
+  if (credentialSource === 'login') {
+    if (serverType !== 'oapi') {
+      throw new Error('credentialSource login is only supported by the oapi server');
+    }
+    if (mode !== 'streamable') {
+      throw new Error('credentialSource login is only supported in streamable mode');
+    }
+    if (!appId) {
+      throw new Error('appId is required when credentialSource is login');
+    }
+    if (userAccessToken || oauth) {
+      throw new Error('credentialSource login cannot be used with userAccessToken or oauth');
+    }
+  }
 
   if (userAccessToken && oauth) {
     logger.error(`[initMcpServerWithTransport] userAccessToken and oauth cannot be used together`);
