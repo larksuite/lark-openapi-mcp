@@ -21,11 +21,17 @@ jest.mock('../../../src/mcp-tool', () => {
     LarkMcpTool: jest.fn().mockImplementation(() => ({
       updateUserAccessToken: jest.fn(),
       registerMcpServer: jest.fn(),
+      getTools: jest.fn().mockReturnValue([{ name: 'default-tool-1' }]),
     })),
     defaultToolNames: ['default-tool-1', 'default-tool-2'],
     presetTools: {
       'preset.default': ['default-tool-1', 'default-tool-2'],
     },
+    AllTools: [
+      { name: 'default-tool-1', project: 'default' },
+      { name: 'default-tool-2', project: 'default' },
+      { name: 'im.v1.message.create', project: 'im' },
+    ],
     RecallTool: {
       name: 'RecallTool',
       description: 'RecallTool description',
@@ -198,6 +204,114 @@ describe('initOAPIMcpServer', () => {
     const calls = LarkMcpTool.mock.calls;
     const toolsOptions = calls[calls.length - 1][0].toolsOptions;
     expect(toolsOptions.allowTools).toEqual(expect.arrayContaining(['preset.default', 'extra-tool']));
+  });
+
+  it('应该对未知的工具或预设名称输出警告', () => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      tools: ['preset.bitable.default'],
+      host: 'localhost',
+      port: 3000,
+    };
+
+    initOAPIMcpServer(options);
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('unknown tool or preset name "preset.bitable.default"'),
+    );
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Available presets:'));
+  });
+
+  it('应该为snake_case形式的工具名提示正确的名称', () => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      tools: ['im_v1_message_create'],
+      host: 'localhost',
+      port: 3000,
+    };
+
+    initOAPIMcpServer(options);
+
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('did you mean "im.v1.message.create"'));
+  });
+
+  it('对有效的工具名和预设名不输出警告', () => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      tools: ['preset.default', 'im.v1.message.create'],
+      host: 'localhost',
+      port: 3000,
+    };
+
+    initOAPIMcpServer(options);
+
+    expect(console.error).not.toHaveBeenCalledWith(expect.stringContaining('unknown tool or preset name'));
+  });
+
+  it('应该忽略空字符串的工具名', () => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      tools: ['im.v1.message.create', ''],
+      host: 'localhost',
+      port: 3000,
+    };
+
+    initOAPIMcpServer(options);
+
+    expect(console.error).not.toHaveBeenCalledWith(expect.stringContaining('unknown tool or preset name'));
+  });
+
+  it('应该为项目名输出专门的提示', () => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      tools: ['im'],
+      host: 'localhost',
+      port: 3000,
+    };
+
+    initOAPIMcpServer(options);
+
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('"im" is a project name'));
+  });
+
+  it('应该为snake_case形式的预设名提示正确的名称', () => {
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      tools: ['preset_default'],
+      host: 'localhost',
+      port: 3000,
+    };
+
+    initOAPIMcpServer(options);
+
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('did you mean "preset.default"'));
+  });
+
+  it('当没有任何工具匹配时输出警告', () => {
+    const { LarkMcpTool } = require('../../../src/mcp-tool');
+    LarkMcpTool.mockImplementationOnce(() => ({
+      updateUserAccessToken: jest.fn(),
+      registerMcpServer: jest.fn(),
+      getTools: jest.fn().mockReturnValue([]),
+    }));
+
+    const options = {
+      appId: 'test-app-id',
+      appSecret: 'test-app-secret',
+      tools: ['default-tool-1'],
+      host: 'localhost',
+      port: 3000,
+    };
+
+    initOAPIMcpServer(options);
+
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('zero tools'));
   });
 });
 
