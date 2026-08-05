@@ -1,5 +1,7 @@
 # Feishu/Lark OpenAPI MCP
 
+[![MCP Toplist](https://mcptoplist.com/badge/glama%2Flarksuite%2Flark-openapi-mcp.svg)](https://mcptoplist.com/server/glama%2Flarksuite%2Flark-openapi-mcp)
+
 [![npm version](https://img.shields.io/npm/v/@larksuiteoapi/lark-mcp.svg)](https://www.npmjs.com/package/@larksuiteoapi/lark-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@larksuiteoapi/lark-mcp.svg)](https://www.npmjs.com/package/@larksuiteoapi/lark-mcp)
 [![Node.js Version](https://img.shields.io/node/v/@larksuiteoapi/lark-mcp.svg)](https://nodejs.org/)
