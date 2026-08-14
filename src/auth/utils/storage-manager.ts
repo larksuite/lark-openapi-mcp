@@ -47,6 +47,14 @@ export class StorageManager {
       const keytar = await import('keytar');
       let key = await keytar.getPassword(AUTH_CONFIG.SERVER_NAME, AUTH_CONFIG.AES_KEY_NAME);
       if (!key) {
+        if (fs.existsSync(this.storageFile)) {
+          throw new Error(
+            `No AES key found in the system keychain, but an encrypted storage file already exists at ${this.storageFile}. ` +
+              'Refusing to generate a new key: doing so would overwrite the keychain entry and make the existing ' +
+              'token store permanently undecryptable. Use the same Node.js runtime that was used for `lark-mcp login`, ' +
+              'or delete the storage file to start fresh.',
+          );
+        }
         key = EncryptionUtil.generateKey();
         await keytar.setPassword(AUTH_CONFIG.SERVER_NAME, AUTH_CONFIG.AES_KEY_NAME, key);
       }
