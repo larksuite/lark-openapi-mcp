@@ -21,6 +21,7 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc",
+    "postbuild": "node -e \"require('fs').chmodSync('dist/cli.js', 0o755)\"",
     "dev": "ts-node src/index.ts",
     "dev:cli": "ts-node src/cli.ts",
     "format": "prettier --write \"src/**/*.ts\"",
