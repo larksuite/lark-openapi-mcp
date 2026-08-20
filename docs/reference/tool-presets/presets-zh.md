@@ -73,6 +73,7 @@
 | drive.v1.permissionMember.create | 添加协作者权限 | | ✓ | | | | ✓ | | |
 | wiki.v2.space.getNode | 获取知识库节点 | ✓ | ✓ | | | | ✓ | | |
 | wiki.v1.node.search | 搜索知识库节点 | | ✓ | | | | ✓ | | |
+| wiki.v2.node.search | 搜索知识库节点 (v2) | | ✓ | | ✓ | | ✓ | | |
 | contact.v3.user.batchGetId | 批量获取用户ID | ✓ | ✓ | | | | | | |
 | task.v2.task.create | 创建任务 | | | | | | | ✓ | |
 | task.v2.task.patch | 修改任务 | | | | | | | ✓ | |

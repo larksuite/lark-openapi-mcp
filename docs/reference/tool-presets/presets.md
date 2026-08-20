@@ -73,6 +73,7 @@ You can also combine presets with individual tools:
 | drive.v1.permissionMember.create | Add collaborator permissions | | ✓ | | | | ✓ | | |
 | wiki.v2.space.getNode | Get Wiki node | ✓ | ✓ | | | | ✓ | | |
 | wiki.v1.node.search | Search Wiki nodes | | ✓ | | | | ✓ | | |
+| wiki.v2.node.search | Search Wiki nodes (v2) | | ✓ | | ✓ | | ✓ | | |
 | contact.v3.user.batchGetId | Batch get user IDs | ✓ | ✓ | | | | | | |
 | task.v2.task.create | Create task | | | | | | | ✓ | |
 | task.v2.task.patch | Modify task | | | | | | | ✓ | |

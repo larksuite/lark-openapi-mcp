@@ -1491,6 +1491,7 @@
 ## Business domain: wikiV2
 | MCP Tool Name | API | Description | 
 | --- | --- | --- |
+| wiki.v2.node.search | [Search Wiki](https://open.feishu.cn/document/server-docs/docs/wiki-v2/search_wiki) | Docs-Wiki-Search Wiki |
 | wiki.v2.space.create | [Create Wiki space](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/wiki-v2/space/create) | This interface is used to create a Wiki space |
 | wiki.v2.space.get | [Access to Wiki space information](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/wiki-v2/space/get) | This interface is used to query the information of the Wiki space according to the Wiki space ID.Space type:- Person Space: Managed by individuals. One person can only have one personal space, and no other administrators can be added.- Team Space: Managed by a team (multiple people), multiple administrators can be added.Space visibility:- Public Space: Visible to all users within the tenant and defaults to member permissions. Additional members cannot be added, but administrators can be added.- Private Space: Only visible to knowledge space administrators and members, administrators and members need to be added manually.Space sharing status:- Open: The wiki space has been published to web.- Closed: The wiki space hasn't been published to web |
 | wiki.v2.space.getNode | [Get Wiki node information](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/wiki-v2/space/get_node) | Get wiki node inforamtion |

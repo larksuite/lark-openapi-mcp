@@ -1508,6 +1508,7 @@
 ## 业务域: wikiV2
 | MCP 工具名称 | API | 描述 | 
 | --- | --- | --- |
+| wiki.v2.node.search | [搜索 Wiki](https://open.feishu.cn/document/server-docs/docs/wiki-v2/search_wiki) | 云文档-知识库-搜索 Wiki |
 | wiki.v2.space.create | [创建知识空间](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/wiki-v2/space/create) | 此接口用于创建知识空间 |
 | wiki.v2.space.get | [获取知识空间信息](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/wiki-v2/space/get) | 此接口用于根据知识空间 ID 查询知识空间的信息，包括空间的类型、可见性、分享状态等 |
 | wiki.v2.space.getNode | [获取知识空间节点信息](https://open.feishu.cn/document/ukTMukTMukTM/uUDN04SN0QjL1QDN/wiki-v2/space/get_node) | 获取知识空间节点信息 |

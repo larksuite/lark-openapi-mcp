@@ -1,5 +1,6 @@
 import { z } from 'zod';
 export type wikiV2ToolName =
+  | 'wiki.v2.node.search'
   | 'wiki.v2.space.create'
   | 'wiki.v2.space.get'
   | 'wiki.v2.space.getNode'
@@ -15,6 +16,20 @@ export type wikiV2ToolName =
   | 'wiki.v2.spaceNode.updateTitle'
   | 'wiki.v2.spaceSetting.update'
   | 'wiki.v2.task.get';
+export const wikiV2NodeSearch = {
+  project: 'wiki',
+  name: 'wiki.v2.node.search',
+  sdkName: 'wiki.v2.node.search',
+  path: '/open-apis/wiki/v2/nodes/search',
+  httpMethod: 'POST',
+  description: '[Feishu/Lark]-Docs-Wiki-Search Wiki',
+  accessTokens: ['user'],
+  schema: {
+    data: z.object({ query: z.string(), space_id: z.string().optional(), node_id: z.string().optional() }),
+    params: z.object({ page_token: z.string().optional(), page_size: z.number().optional() }).optional(),
+    useUAT: z.boolean().describe('Use user access token, otherwise use tenant access token').optional(),
+  },
+};
 export const wikiV2SpaceCreate = {
   project: 'wiki',
   name: 'wiki.v2.space.create',
@@ -412,6 +427,7 @@ export const wikiV2TaskGet = {
   },
 };
 export const wikiV2Tools = [
+  wikiV2NodeSearch,
   wikiV2SpaceCreate,
   wikiV2SpaceGet,
   wikiV2SpaceGetNode,

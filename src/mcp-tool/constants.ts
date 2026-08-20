@@ -74,6 +74,7 @@ export const presetBaseToolNames: ToolName[] = [
   ...presetBaseCommonToolNames,
   'bitable.v1.appTableRecord.create',
   'bitable.v1.appTableRecord.update',
+  'wiki.v2.node.search',
 ];
 
 export const presetBaseRecordBatchToolNames: ToolName[] = [
@@ -89,6 +90,7 @@ export const presetDocToolNames: ToolName[] = [
   'drive.v1.permissionMember.create',
   'wiki.v2.space.getNode',
   'wiki.v1.node.search',
+  'wiki.v2.node.search',
 ];
 
 export const presetTaskToolNames: ToolName[] = [
