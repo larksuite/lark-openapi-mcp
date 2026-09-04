@@ -1486,7 +1486,7 @@
 ## Business domain: wikiV1
 | MCP Tool Name | API | Description | 
 | --- | --- | --- |
-| wiki.v1.node.search | [Search Wiki](https://open.feishu.cn/document/ukTMukTMukTM/uEzN0YjLxcDN24SM3QjN/search_wiki) | Docs-Wiki-Search Wiki |
+| wiki.v1.node.search | [Search Wiki](https://open.feishu.cn/document/server-docs/docs/wiki-v2/search_wiki) | Docs-Wiki-Search Wiki |
 
 ## Business domain: wikiV2
 | MCP Tool Name | API | Description | 
