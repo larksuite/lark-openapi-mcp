@@ -1503,7 +1503,7 @@
 ## 业务域: wikiV1
 | MCP 工具名称 | API | 描述 | 
 | --- | --- | --- |
-| wiki.v1.node.search | [搜索 Wiki](https://open.feishu.cn/document/ukTMukTMukTM/uEzN0YjLxcDN24SM3QjN/search_wiki) | 云文档-知识库-搜索 Wiki |
+| wiki.v1.node.search | [搜索 Wiki](https://open.feishu.cn/document/server-docs/docs/wiki-v2/search_wiki) | 云文档-知识库-搜索 Wiki |
 
 ## 业务域: wikiV2
 | MCP 工具名称 | API | 描述 | 
