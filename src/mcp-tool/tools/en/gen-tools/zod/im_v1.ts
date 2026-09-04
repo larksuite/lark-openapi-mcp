@@ -1741,7 +1741,7 @@ export const imV1MessageList = {
   httpMethod: 'GET',
   description:
     '[Feishu/Lark]-Messaging-Message management-Get chat history-Obtains chat history (chat records) of chats (including private chats and group chats)',
-  accessTokens: ['tenant'],
+  accessTokens: ['tenant', 'user'],
   schema: {
     params: z.object({
       container_id_type: z
@@ -1783,6 +1783,7 @@ export const imV1MessageList = {
         )
         .optional(),
     }),
+    useUAT: z.boolean().describe('Use user access token, otherwise use tenant access token').optional(),
   },
 };
 export const imV1MessageMergeForward = {
