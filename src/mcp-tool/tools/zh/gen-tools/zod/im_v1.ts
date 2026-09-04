@@ -1639,7 +1639,7 @@ export const imV1MessageList = {
   path: '/open-apis/im/v1/messages',
   httpMethod: 'GET',
   description: '[Feishu/Lark]-消息-消息管理-获取会话历史消息-获取指定会话（包括单聊、群组）内的历史消息（即聊天记录）',
-  accessTokens: ['tenant'],
+  accessTokens: ['tenant', 'user'],
   schema: {
     params: z.object({
       container_id_type: z
@@ -1674,6 +1674,7 @@ export const imV1MessageList = {
         )
         .optional(),
     }),
+    useUAT: z.boolean().describe('Use user access token, otherwise use tenant access token').optional(),
   },
 };
 export const imV1MessageMergeForward = {
