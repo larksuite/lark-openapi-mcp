@@ -1618,11 +1618,12 @@ export const imV1MessageGet = {
   path: '/open-apis/im/v1/messages/:message_id',
   httpMethod: 'GET',
   description: '[Feishu/Lark]-消息-消息管理-获取指定消息的内容-调用该接口通过消息的 `message_id` 查询消息内容',
-  accessTokens: ['tenant'],
+  accessTokens: ['tenant', 'user'],
   schema: {
     params: z
       .object({ user_id_type: z.enum(['open_id', 'union_id', 'user_id']).describe('用户ID类型').optional() })
       .optional(),
+    useUAT: z.boolean().describe('使用用户身份请求, 否则使用应用身份').optional(),
     path: z.object({
       message_id: z
         .string()
@@ -1639,7 +1640,7 @@ export const imV1MessageList = {
   path: '/open-apis/im/v1/messages',
   httpMethod: 'GET',
   description: '[Feishu/Lark]-消息-消息管理-获取会话历史消息-获取指定会话（包括单聊、群组）内的历史消息（即聊天记录）',
-  accessTokens: ['tenant'],
+  accessTokens: ['tenant', 'user'],
   schema: {
     params: z.object({
       container_id_type: z
@@ -1674,6 +1675,7 @@ export const imV1MessageList = {
         )
         .optional(),
     }),
+    useUAT: z.boolean().describe('使用用户身份请求, 否则使用应用身份').optional(),
   },
 };
 export const imV1MessageMergeForward = {
