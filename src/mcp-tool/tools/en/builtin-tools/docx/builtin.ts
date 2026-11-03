@@ -10,8 +10,8 @@ export type docxBuiltinToolName = 'docx.builtin.search' | 'docx.builtin.import';
 export const larkDocxBuiltinSearchTool: McpTool = {
   project: 'docx',
   name: 'docx.builtin.search',
-  accessTokens: ['user'],
-  description: '[Feishu/Lark]-Docs-Document-Search Document-Search cloud documents, only supports user_access_token',
+  accessTokens: ['user', 'tenant'],
+  description: '[Feishu/Lark]-Docs-Document-Search Document-Search cloud documents. Supports both user identity (user_access_token) and application identity (tenant_access_token); application identity is used when useUAT is not set',
   schema: {
     data: z.object({
       search_key: z.string().describe('Search keyword'),
@@ -43,21 +43,30 @@ export const larkDocxBuiltinSearchTool: McpTool = {
     try {
       const { userAccessToken } = options || {};
 
-      if (!userAccessToken) {
+      if (params.useUAT && !userAccessToken) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: JSON.stringify({ msg: 'User access token is not configured' }) }],
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                msg: 'No user access token configured. Run `lark-mcp login` to authorize a user, or omit useUAT to call this tool with the application (tenant) identity instead.',
+              }),
+            },
+          ],
         };
       }
 
-      const response = await client.request(
-        {
-          method: 'POST',
-          url: '/open-apis/suite/docs-api/search/object',
-          data: params.data,
-        },
-        lark.withUserAccessToken(userAccessToken),
-      );
+      const request = {
+        method: 'POST' as const,
+        url: '/open-apis/suite/docs-api/search/object',
+        data: params.data,
+      };
+
+      const response =
+        userAccessToken && params.useUAT
+          ? await client.request(request, lark.withUserAccessToken(userAccessToken))
+          : await client.request(request);
 
       return {
         content: [

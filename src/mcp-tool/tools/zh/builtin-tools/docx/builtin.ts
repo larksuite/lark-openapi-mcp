@@ -10,8 +10,8 @@ export type docxBuiltinToolName = 'docx.builtin.search' | 'docx.builtin.import';
 export const larkDocxBuiltinSearchTool: McpTool = {
   project: 'docx',
   name: 'docx.builtin.search',
-  accessTokens: ['user'],
-  description: '[飞书/Lark] - 云文档-文档 - 搜索文档 - 搜索云文档，只支持user_access_token',
+  accessTokens: ['user', 'tenant'],
+  description: '[飞书/Lark] - 云文档-文档 - 搜索文档 - 搜索云文档，支持用户身份（user_access_token）与应用身份（tenant_access_token），不传 useUAT 时使用应用身份',
   schema: {
     data: z.object({
       search_key: z.string().describe('搜索关键词'),
@@ -37,21 +37,30 @@ export const larkDocxBuiltinSearchTool: McpTool = {
     try {
       const { userAccessToken } = options || {};
 
-      if (!userAccessToken) {
+      if (params.useUAT && !userAccessToken) {
         return {
           isError: true,
-          content: [{ type: 'text' as const, text: JSON.stringify({ msg: '当前未配置 userAccessToken' }) }],
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                msg: '当前未配置用户授权（user_access_token），请先运行 lark-mcp login 完成用户授权；或去掉 useUAT 参数，改用应用身份（tenant_access_token）请求',
+              }),
+            },
+          ],
         };
       }
 
-      const response = await client.request(
-        {
-          method: 'POST',
-          url: '/open-apis/suite/docs-api/search/object',
-          data: params.data,
-        },
-        lark.withUserAccessToken(userAccessToken),
-      );
+      const request = {
+        method: 'POST' as const,
+        url: '/open-apis/suite/docs-api/search/object',
+        data: params.data,
+      };
+
+      const response =
+        userAccessToken && params.useUAT
+          ? await client.request(request, lark.withUserAccessToken(userAccessToken))
+          : await client.request(request);
 
       return {
         content: [
