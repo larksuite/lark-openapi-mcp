@@ -39,11 +39,14 @@ const sdkFuncCall = async (client: lark.Client, params: any, options: McpHandler
 export const larkOapiHandler: McpHandler = async (client, params, options) => {
   try {
     const response = await sdkFuncCall(client, params, options);
+    // OpenAPI can return a business error in an otherwise successful HTTP response.
+    const isApiError = typeof response?.code === 'number' && response.code !== 0;
     return {
+      ...(isApiError ? { isError: true } : {}),
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify(response?.data ?? response),
+          text: JSON.stringify(isApiError ? response : (response?.data ?? response)),
         },
       ],
     };
